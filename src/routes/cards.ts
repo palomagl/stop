@@ -18,6 +18,9 @@ export async function cardRoutes(app: FastifyInstance) {
   // TODO: crie o schema `paramsSchema` com o campo `id`
   //       (número inteiro positivo; dica: z.coerce.number())
   // const paramsSchema = ...
+  const paramsSchema = z.object({ 
+    id: z.coerce.number().int().positive(), 
+  }); 
 
   // ===========================================================
   // ROTA 1 - POST /cards  (Criar card)              [3,0 pts]
@@ -27,19 +30,48 @@ export async function cardRoutes(app: FastifyInstance) {
   //   - answer:   string, obrigatória, mínimo 1 caractere
   //   - deckId:   número inteiro positivo
   // const createCardSchema = ...
+  const createCardSchema = z.object({ 
+    question: z.string().min(3), 
+    answer: z.string().min(1), 
+    deckId: z.number().int().positive(), 
+  }); 
+
+  // Bônus ><
+  const reviewSchema = z.object({ 
+    grade: z.number().int().min(1).max(5), 
+  }); 
 
   server.post(
     "/cards",
     {
       // TODO: registre o schema do body aqui -> schema: { body: createCardSchema }
+      schema: { 
+        body: createCardSchema 
+      },
     },
     async (request, reply) => {
       // TODO:
       // 1. Pegue question, answer e deckId de request.body
+      const { question, answer, deckId } = request.body; 
       // 2. Verifique se o baralho (deckId) existe -> se não, 404
+      const deck = await prisma.deck.findUnique({ 
+        where: { id: deckId }, 
+      }); 
+      if (!deck) { 
+        return reply.status(404).send({ 
+          message: "Baralho não encontrado", 
+        }); 
+      }
       // 3. Crie o card com prisma.card.create(...)
+      const card = await prisma.card.create({ 
+        data: { 
+          question, 
+          answer, 
+          deckId, 
+        }, 
+      });
       // 4. Responda com status 201 e o card criado
-      return reply.status(501).send({ message: "Rota não implementada" });
+      return reply.status(201).send(card);
     },
   );
 
@@ -49,11 +81,24 @@ export async function cardRoutes(app: FastifyInstance) {
   server.get("/cards", async (request, reply) => {
     // TODO:
     // 1. Busque todos os cards com prisma.card.findMany(...)
+    const cards = await prisma.card.findMany({ 
     // 2. Inclua o baralho vinculado retornando apenas id e name:
     //      include: { deck: { select: { id: true, name: true } } }
+      include: { 
+        deck: { 
+          select: { 
+            id: true, 
+            name: true, 
+          }, 
+        }, 
+      },
     // 3. Ordene por id crescente
+      orderBy: { 
+        id: "asc", 
+      }, 
+    });
     // 4. Responda com status 200 e a lista (array)
-    return reply.status(501).send({ message: "Rota não implementada" });
+    return reply.status(200).send(cards);
   });
 
   // ===========================================================
@@ -63,14 +108,34 @@ export async function cardRoutes(app: FastifyInstance) {
     "/cards/:id",
     {
       // TODO: registre o schema dos params -> schema: { params: paramsSchema }
+      schema: {
+        params: paramsSchema
+      },
     },
     async (request, reply) => {
       // TODO:
       // 1. Pegue o id de request.params
+      const{ id } = request.params
       // 2. Busque com prisma.card.findUnique(...) incluindo o deck
+      const card = await prisma.card.findUnique({ 
+        where: { id }, 
+        include: { 
+          deck: { 
+            select: { 
+              id: true, 
+              name: true, 
+            }, 
+          }, 
+        }, 
+      }); 
       // 3. Se não existir -> 404 { message: "Card não encontrado" }
+      if (!card) {
+        return reply.status(400).send({
+          message: "Card não encontrado",
+        })
+      }
       // 4. Se existir -> 200 com o card
-      return reply.status(501).send({ message: "Rota não implementada" });
+      return reply.status(200).send(card);
     },
   );
 
@@ -81,14 +146,30 @@ export async function cardRoutes(app: FastifyInstance) {
     "/cards/:id",
     {
       // TODO: registre o schema dos params
+      schema: {
+        params: paramsSchema
+      },
     },
     async (request, reply) => {
       // TODO:
       // 1. Pegue o id de request.params
+      const{ id } = request.params
       // 2. Verifique se o card existe -> se não, 404
+      const card = await prisma.card.findUnique({ 
+        where: { id }, 
+      });
+
+      if (!card) {
+        return reply.status(400).send({
+          message: "Card não encontrado",
+        })
+      }
       // 3. Remova com prisma.card.delete(...)
+      await prisma.card.delete({
+        where: {id},
+      })
       // 4. Responda 200 { message: "Card removido com sucesso" }
-      return reply.status(501).send({ message: "Rota não implementada" });
+      return reply.status(200).send({ message: "Card removido com sucesso" });
     },
   );
 
@@ -101,16 +182,40 @@ export async function cardRoutes(app: FastifyInstance) {
     "/cards/:id/review",
     {
       // TODO: registre params e body
+      schema: { 
+        params: paramsSchema, 
+        body: reviewSchema, 
+      },
     },
     async (request, reply) => {
       // TODO (opcional):
       // 1. Verifique se o card existe -> se não, 404
+      const { id } = request.params; 
+      const { grade } = request.body; 
+
+      const card = await prisma.card.findUnique({ 
+        where: { id }, 
+      }); 
+ 
+      if (!card) { 
+        return reply.status(404).send({ 
+          message: "Card não encontrado", 
+        }); 
+      }
       // 2. Atualize com prisma.card.update(...):
       //      reviewCount: { increment: 1 }
       //      lastGrade: grade
       //      lastReviewedAt: new Date()
+       const updatedCard = await prisma.card.update({ 
+        where: { id }, 
+        data: { 
+          reviewCount: { increment: 1 }, 
+          lastGrade: grade, 
+          lastReviewedAt: new Date(), 
+        }, 
+      });
       // 3. Responda 200 com o card atualizado
-      return reply.status(501).send({ message: "Rota não implementada" });
+      return reply.status(200).send(updatedCard);
     },
   );
 }
