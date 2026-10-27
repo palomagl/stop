@@ -2,6 +2,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useState, type ReactNode } from 'react';
 import type { EstadoSala, FimDePartida } from '@rabisco/shared';
 import { Avatar } from '../componentes/Avatar';
+import { Bonequinho, Degrau, PlacaNome } from '../componentes/Podio';
 import { Confete } from '../componentes/Confete';
 import { Tela } from '../componentes/Tela';
 import { Tic } from '../componentes/Tic';
@@ -11,11 +12,11 @@ import { vibracoes } from '../lib/vibrar';
 
 type Pessoa = FimDePartida['classificacao'][number];
 
-/** Degraus da esquerda para a direita: 2º, 1º, 3º, como num pódio de verdade. */
-const DEGRAUS = [
-  { lugar: 2, altura: 'h-32', cor: 'bg-[#dfe6f5]', avatar: 76 },
-  { lugar: 1, altura: 'h-44', cor: 'bg-[#ffd23f]', avatar: 96 },
-  { lugar: 3, altura: 'h-24', cor: 'bg-[#ffb07a]', avatar: 68 },
+/** Colunas da esquerda para a direita: 2º, 1º, 3º, como num pódio de verdade. */
+const COLUNAS = [
+  { lugar: 2 as const, largura: 100 },
+  { lugar: 1 as const, largura: 120 },
+  { lugar: 3 as const, largura: 100 },
 ];
 
 /** Ordem do suspense: do 3º para o 1º. */
@@ -95,12 +96,12 @@ export function Fim({ sala }: { sala: EstadoSala }) {
           {acabou ? (
             <motion.h1
               key="fim"
-              className="titulo text-center text-5xl"
-              initial={{ scale: 0.6, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 16 }}
+              className="rounded-2xl border-[3px] border-[#0b1638] bg-[#6f93ff] px-5 py-1 font-titulo text-4xl text-[#0b1638] shadow-[0_4px_0_#0b1638]"
+              initial={{ scale: 0.6, opacity: 0, rotate: -6 }}
+              animate={{ scale: 1, opacity: 1, rotate: -2 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 14 }}
             >
-              Fim de jogo!
+              Pódio!
             </motion.h1>
           ) : (
             <motion.h1
@@ -114,43 +115,45 @@ export function Fim({ sala }: { sala: EstadoSala }) {
         </AnimatePresence>
       </div>
 
-      <div className="mx-auto mt-6 flex max-w-md items-end justify-center gap-2" role="list" aria-label="Pódio">
-        {DEGRAUS.map((degrau, coluna) => {
-          const pessoa = podio[degrau.lugar - 1];
-          if (!pessoa) return <div key={degrau.lugar} className="flex-1" aria-hidden="true" />;
-          const revelado = lugares.indexOf(degrau.lugar) < revelados;
-          return (
-            <div key={degrau.lugar} role="listitem" className="flex flex-1 flex-col items-center">
-              <div className="relative flex min-h-[10.5rem] w-full flex-col items-center justify-end">
-                <AnimatePresence>
-                  {revelado && (
-                    <PessoaNoPodio
-                      pessoa={pessoa}
-                      lugar={degrau.lugar}
-                      tamanho={degrau.avatar}
-                      eu={pessoa.jogadorId === sala.meuId}
-                      reduzir={Boolean(reduzir)}
-                    />
-                  )}
-                </AnimatePresence>
+      <div className="relative mx-auto mt-4 max-w-md">
+        {/* Faixa amarela atrás dos bonequinhos, como num palco */}
+        <div
+          className="pointer-events-none absolute -inset-x-6 top-[34%] h-28 -rotate-[8deg] bg-amarelo/90"
+          aria-hidden="true"
+        />
+        <div className="relative flex items-end justify-center" role="list" aria-label="Pódio">
+          {COLUNAS.map((coluna, i) => {
+            const pessoa = podio[coluna.lugar - 1];
+            if (!pessoa) return <div key={coluna.lugar} className="flex-1" aria-hidden="true" />;
+            const revelado = lugares.indexOf(coluna.lugar) < revelados;
+            return (
+              <div key={coluna.lugar} role="listitem" className="flex min-w-0 flex-1 flex-col items-center">
+                {/* Na frente do degrau, com o pescocinho apoiado na tampa */}
+                <div className="relative z-[3] -mb-3 flex h-[12.5rem] w-full flex-col items-center justify-end">
+                  <AnimatePresence>
+                    {revelado && (
+                      <PessoaNoPodio
+                        pessoa={pessoa}
+                        lugar={coluna.lugar}
+                        largura={coluna.largura}
+                        eu={pessoa.jogadorId === sala.meuId}
+                        reduzir={Boolean(reduzir)}
+                      />
+                    )}
+                  </AnimatePresence>
+                </div>
+                <Degrau
+                  lugar={coluna.lugar}
+                  pontos={revelado ? pessoa.pontos : null}
+                  atraso={0.15 * i}
+                  reduzir={Boolean(reduzir)}
+                />
               </div>
-              <motion.div
-                className={`grid w-full place-items-start justify-center rounded-t-2xl border-[3px] border-b-0 border-[#0b1638] pt-2 ${degrau.altura} ${degrau.cor}`}
-                initial={reduzir ? false : { scaleY: 0 }}
-                animate={{ scaleY: 1 }}
-                style={{ originY: 1 }}
-                transition={{ delay: 0.15 * coluna, type: 'spring', stiffness: 160, damping: 18 }}
-              >
-                <span className="font-titulo text-5xl text-[#0b1638]">
-                  {pessoa.posicao}
-                  <span className="sr-only">º lugar</span>
-                </span>
-              </motion.div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+        <div className="relative h-3 rounded-b-xl border-x-[3px] border-b-[3px] border-[#0b1638] bg-[#2a49b8]" aria-hidden="true" />
       </div>
-      <div className="mx-auto h-[6px] max-w-md rounded-full bg-[#0b1638]" aria-hidden="true" />
       {!acabou && (
         <div className="mt-5 text-center">
           <button type="button" onClick={pular} className="chip px-4 py-2 hover:bg-white/20">
@@ -169,8 +172,12 @@ export function Fim({ sala }: { sala: EstadoSala }) {
       {acabou && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: reduzir ? 0 : 0.8 }}>
           {eu && (
-            <p className="titulo mx-auto mt-6 text-center text-2xl">
-              {eu.posicao === 1 ? 'Você ganhou! 🏆' : `Você ficou em ${eu.posicao}º lugar`}
+            <p className="cartao mx-auto mt-5 max-w-md px-4 py-3 text-center text-lg font-extrabold">
+              {eu.posicao === 1
+                ? 'Você ganhou! 🏆'
+                : eu.posicao <= 3
+                  ? `Você está no pódio, em ${eu.posicao}º lugar! 🎉`
+                  : `Você ficou em ${eu.posicao}º lugar`}
             </p>
           )}
 
@@ -203,64 +210,47 @@ export function Fim({ sala }: { sala: EstadoSala }) {
   );
 }
 
-/** O bicho cai do alto e quica no degrau. Quem ganhou leva coroa, raios e fica pulando. */
+/** O bonequinho cai do alto e quica no degrau. Quem ganhou pula de alegria, com raios atrás. */
 function PessoaNoPodio({
   pessoa,
   lugar,
-  tamanho,
+  largura,
   eu,
   reduzir,
 }: {
   pessoa: Pessoa;
   lugar: number;
-  tamanho: number;
+  largura: number;
   eu: boolean;
   reduzir: boolean;
 }) {
   const primeiro = lugar === 1;
   return (
     <motion.div
-      className="relative flex w-full flex-col items-center"
-      initial={reduzir ? false : { y: -320, opacity: 0, rotate: lugar === 2 ? -25 : 25 }}
+      className="relative flex w-full flex-col items-center gap-1"
+      initial={reduzir ? false : { y: -340, opacity: 0, rotate: lugar === 2 ? -20 : 20 }}
       animate={{ y: 0, opacity: 1, rotate: 0 }}
       transition={{ type: 'spring', stiffness: 220, damping: 13 }}
     >
       {primeiro && !reduzir && (
         <motion.div
-          className="absolute top-2 -z-10 size-44 rounded-full opacity-60"
+          className="absolute top-6 -z-10 size-48 rounded-full opacity-70"
           style={{
-            background:
-              'repeating-conic-gradient(from 0deg, rgb(255 210 63 / 0.75) 0deg 10deg, transparent 10deg 24deg)',
-            maskImage: 'radial-gradient(circle, black 30%, transparent 70%)',
+            background: 'repeating-conic-gradient(from 0deg, rgb(255 255 255 / 0.8) 0deg 10deg, transparent 10deg 24deg)',
+            maskImage: 'radial-gradient(circle, black 25%, transparent 68%)',
           }}
           animate={{ rotate: 360 }}
           transition={{ duration: 9, repeat: Infinity, ease: 'linear' }}
           aria-hidden="true"
         />
       )}
-      {primeiro && (
-        <motion.span
-          className="text-4xl"
-          initial={reduzir ? false : { y: -40, opacity: 0, rotate: -30 }}
-          animate={{ y: 0, opacity: 1, rotate: 0 }}
-          transition={{ delay: 0.45, type: 'spring', stiffness: 300, damping: 12 }}
-          aria-hidden="true"
-        >
-          👑
-        </motion.span>
-      )}
+      <PlacaNome nome={pessoa.apelido} eu={eu} />
       <motion.div
-        animate={primeiro && !reduzir ? { y: [0, -10, 0] } : undefined}
-        transition={{ delay: 0.9, duration: 0.7, repeat: Infinity, repeatDelay: 0.5 }}
+        animate={primeiro && !reduzir ? { y: [0, -12, 0] } : undefined}
+        transition={{ delay: 0.9, duration: 0.6, repeat: Infinity, repeatDelay: 0.4 }}
       >
-        <Avatar
-          id={pessoa.avatar}
-          tamanho={tamanho}
-          className={`shadow-[0_4px_0_#0b1638] ${eu ? 'ring-4 ring-amarelo' : ''}`}
-        />
+        <Bonequinho avatar={pessoa.avatar} largura={largura} />
       </motion.div>
-      <span className="mt-1 max-w-full truncate px-1 text-lg font-extrabold leading-normal">{pessoa.apelido}</span>
-      <span className="chip mb-1 py-0">{pessoa.pontos} pts</span>
     </motion.div>
   );
 }
