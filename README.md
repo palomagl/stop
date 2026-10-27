@@ -31,8 +31,10 @@
 - 📱 **De 2 a 10 pessoas**, cada uma no seu celular, em tempo real
 - 🦫 **Sem cadastro:** escolha um apelido e um dos 24 bichos (capivara, onça, caramelo…)
 - 🎲 **Jogar agora:** cai numa sala com quem estiver online
+- 📦 **Pacotes prontos** de categorias (Clássico, Rapidinho, Cultura pop, Brasileirão…) e votação para **pular a letra**
+- 🏆 **Folha da rodada** com a resposta de todo mundo e **pódio com suspense**, do 3º ao 1º
 - 🔌 **Caiu a internet?** Você volta para o mesmo lugar, com as respostas salvas
-- 🏆 **Ranking, histórico** e dá para **instalar no celular** como app
+- 📈 **Ranking, histórico** e dá para **instalar no celular** como app
 
 ## Feito com
 

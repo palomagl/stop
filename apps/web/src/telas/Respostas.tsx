@@ -121,6 +121,24 @@ export function Respostas({ sala }: { sala: EstadoSala }) {
           >
             {letra}
           </span>
+          {participando && sala.pularLetra.disponivel && !travando && !fechado && (
+            <button
+              type="button"
+              onClick={acoes.pularLetra}
+              disabled={sala.pularLetra.euVotei}
+              className="chip flex-col gap-0 px-3 py-1 leading-tight transition hover:bg-white/20 active:scale-95 disabled:cursor-default"
+              aria-label={
+                sala.pularLetra.euVotei
+                  ? `Você votou para pular a letra. ${sala.pularLetra.votos} de ${sala.pularLetra.necessarios} votos.`
+                  : `Votar para pular a letra. ${sala.pularLetra.votos} de ${sala.pularLetra.necessarios} votos.`
+              }
+            >
+              <span>{sala.pularLetra.euVotei ? '✓ Votou pular' : '🔄 Pular letra'}</span>
+              <span className="text-[0.7rem] font-bold text-texto-suave">
+                {sala.pularLetra.votos}/{sala.pularLetra.necessarios} votos
+              </span>
+            </button>
+          )}
           <div className="flex flex-col items-end">
             <span className="text-xs font-extrabold uppercase tracking-[0.14em] text-texto-suave">
               Rodada {sala.rodada} de {sala.config.rodadas}

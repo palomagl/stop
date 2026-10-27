@@ -265,6 +265,7 @@ export const acoes = {
   jogarDeNovo: (voltarParaSala: boolean) => socket.emit('partida:jogarDeNovo', { voltarParaSala }),
   rascunho: (categoria: string, texto: string) => socket.emit('resposta:rascunho', { categoria, texto }),
   stop: (respostas: Record<string, string>) => socket.emit('rodada:stop', { respostas }),
+  pularLetra: () => socket.emit('rodada:pularLetra'),
   votar: (indice: number, jogadorId: string, voto: Voto) => socket.emit('voto:enviar', { indice, jogadorId, voto }),
   prontoCorrecao: (indice: number) => socket.emit('correcao:pronto', { indice }),
   prontoResultado: (rodada: number) => socket.emit('resultado:pronto', { rodada }),

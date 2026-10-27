@@ -273,6 +273,11 @@ export async function iniciarServidor(opcoes: OpcoesServidor = {}): Promise<Serv
       return c?.sala.stop(c.jogador.id, respostas);
     });
 
+    ouvir('rodada:pularLetra', () => {
+      const c = contexto();
+      return c?.sala.votarPularLetra(c.jogador.id);
+    });
+
     ouvir('voto:enviar', ({ indice, jogadorId, voto }) => {
       const c = contexto();
       return c?.sala.votar(c.jogador.id, indice, jogadorId, voto);
