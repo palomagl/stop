@@ -2,7 +2,7 @@
 # No painel do Render: New > Blueprint > escolha este repositório.
 services:
   - type: web
-    name: rabisco-servidor
+    name: stopou-servidor
     runtime: node
     plan: free
     # Virginia é a região do Render mais perto do Brasil.

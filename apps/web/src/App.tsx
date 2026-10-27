@@ -26,6 +26,8 @@ export function App() {
     return () => clearTimeout(id);
   }, []);
 
+  if (conexao === 'sem-configuracao') return <Acordando problema="configuracao" />;
+  if (conexao === 'nao-acordou') return <Acordando problema="demora" />;
   if (conexao === 'acordando') return demorou ? <Acordando /> : null;
   if (restaurando) return null;
 
