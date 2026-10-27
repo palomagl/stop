@@ -55,7 +55,7 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+          globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}'],
           // Só as fontes do alfabeto latino; as outras escritas o português não usa.
           globIgnores: ['**/*cyrillic*', '**/*vietnamese*', '**/*greek*', '**/*devanagari*'],
           navigateFallback: '/index.html',
