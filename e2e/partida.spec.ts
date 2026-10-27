@@ -19,7 +19,7 @@ async function entrarPorCodigo(pagina: Page, codigo: string, apelido: string) {
   await pagina.getByRole('button', { name: 'Entrar', exact: true }).click();
 }
 
-const campos = (pagina: Page) => pagina.locator('input.linha-escrita');
+const campos = (pagina: Page) => pagina.locator('form input.campo');
 
 test('duas pessoas criam e entram na sala, jogam uma rodada e veem o placar', async ({ browser }) => {
   const ana = await (await browser.newContext()).newPage();

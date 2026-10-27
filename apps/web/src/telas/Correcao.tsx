@@ -50,7 +50,7 @@ export function Correcao({ sala }: { sala: EstadoSala }) {
     <div className="flex items-center gap-3">
       <button
         type="button"
-        className={`botao h-14 flex-1 text-2xl disabled:opacity-90 ${estouPronto ? 'botao-menta' : 'botao-amarelo'}`}
+        className={`botao h-14 flex-1 whitespace-nowrap px-3 text-xl disabled:opacity-90 ${estouPronto ? 'botao-menta' : 'botao-amarelo'}`}
         disabled={estouPronto}
         onClick={() => {
           sons.pop();
