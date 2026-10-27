@@ -18,6 +18,9 @@ import { ArquivoEmMemoria } from '../arquivo/memoria';
 import type { Arquivo } from '../arquivo/tipos';
 import { GerenciadorDeSalas } from '../jogo/gerenciador';
 import type { Jogador, Sala } from '../jogo/sala';
+import type { Cerebro } from '../robos/cerebro';
+import { ControleDeRobos } from '../robos/controle';
+import { CerebroDePalavras } from '../robos/palavras';
 import { LimiteDeEventos } from './limite';
 
 interface DadosSocket {
@@ -36,6 +39,8 @@ export interface OpcoesServidor {
   aleatorio?: () => number;
   /** Onde as partidas terminadas são guardadas. Sem ele, ficam na memória. */
   arquivo?: Arquivo;
+  /** De onde os robôs tiram as ideias. Sem ele, usam as listas de palavras do jogo. */
+  cerebro?: Cerebro;
 }
 
 export interface ServidorRodando {
@@ -50,6 +55,8 @@ const INTERVALO_LIMPEZA_MS = 60_000;
 export async function iniciarServidor(opcoes: OpcoesServidor = {}): Promise<ServidorRodando> {
   const origens = opcoes.origens?.length ? opcoes.origens : true;
   const arquivo = opcoes.arquivo ?? new ArquivoEmMemoria();
+  const cerebro = opcoes.cerebro ?? new CerebroDePalavras();
+  const aleatorio = opcoes.aleatorio ?? Math.random;
 
   function responder(req: IncomingMessage, res: ServerResponse, status: number, corpo: unknown) {
     const origem = req.headers.origin;
@@ -66,7 +73,12 @@ export async function iniciarServidor(opcoes: OpcoesServidor = {}): Promise<Serv
     if (req.method !== 'GET') return responder(req, res, 405, { erro: 'Método não permitido.' });
 
     if (url.pathname === '/health' || url.pathname === '/') {
-      return responder(req, res, 200, { ok: true, salas: gerenciador.total, banco: arquivo.persistente });
+      return responder(req, res, 200, {
+        ok: true,
+        salas: gerenciador.total,
+        banco: arquivo.persistente,
+        robos: cerebro.situacao(),
+      });
     }
 
     if (url.pathname === '/ranking' || url.pathname === '/historico') {
@@ -116,8 +128,9 @@ export async function iniciarServidor(opcoes: OpcoesServidor = {}): Promise<Serv
   }
 
   const gerenciador = new GerenciadorDeSalas(
-    { duracoes: { ...DURACOES, ...opcoes.duracoes }, aleatorio: opcoes.aleatorio ?? Math.random },
+    { duracoes: { ...DURACOES, ...opcoes.duracoes }, aleatorio },
     (sala) => {
+      new ControleDeRobos(sala, cerebro, aleatorio);
       sala.on('mudou', () => agendarEnvio(sala));
       sala.on('stop', (dados) => io.to(sala.codigo).emit('rodada:stop', dados));
       sala.on('reacao', (dados) => io.to(sala.codigo).emit('reacao', dados));
@@ -241,6 +254,11 @@ export async function iniciarServidor(opcoes: OpcoesServidor = {}): Promise<Serv
     ouvir('sala:remover', ({ jogadorId }) => {
       const c = contexto();
       return c?.sala.remover(c.jogador.id, jogadorId);
+    });
+
+    ouvir('sala:adicionarRobo', ({ nivel }) => {
+      const c = contexto();
+      return c?.sala.adicionarRobo(c.jogador.id, nivel);
     });
 
     ouvir('jogador:denunciar', ({ jogadorId }) => {

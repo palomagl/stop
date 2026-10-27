@@ -1,4 +1,4 @@
-import type { Config } from './tipos';
+import type { Config, NivelRobo } from './tipos';
 
 /** Nome provisório do jogo. Trocar aqui troca em todo lugar. */
 export const NOME_DO_JOGO = 'Stopou!';
@@ -14,6 +14,16 @@ export const MAX_RODADAS = 15;
 export const MIN_TEMPO_RODADA = 30;
 export const MAX_TEMPO_RODADA = 300;
 export const TOTAL_AVATARES = 84;
+/** Robôs que a sala aceita. Eles também ocupam vaga no limite de jogadores. */
+export const MAX_ROBOS = 5;
+
+export const NIVEIS_ROBO = ['facil', 'medio', 'dificil'] as const;
+export const NOMES_NIVEL_ROBO: Record<NivelRobo, string> = { facil: 'Fácil', medio: 'Médio', dificil: 'Difícil' };
+export const DESCRICOES_NIVEL_ROBO: Record<NivelRobo, string> = {
+  facil: 'Pensa devagar e às vezes trava',
+  medio: 'Joga como a maioria',
+  dificil: 'Rápido e foge do óbvio',
+};
 
 export const TAMANHO_CODIGO = 5;
 /** Sem I, L, O e Q: letras que se confundem quando o código é ditado ou lido rápido. */

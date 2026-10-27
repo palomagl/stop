@@ -12,7 +12,7 @@ import {
 } from '@rabisco/shared';
 import { Avatar } from '../componentes/Avatar';
 import { Carimbo } from '../componentes/Carimbo';
-import { BotaoDenunciar } from '../componentes/ListaJogadores';
+import { BotaoDenunciar, SeloRobo } from '../componentes/ListaJogadores';
 import { Cronometro } from '../componentes/Cronometro';
 import { Tela } from '../componentes/Tela';
 import { acoes } from '../lib/jogo';
@@ -131,10 +131,10 @@ export function Correcao({ sala }: { sala: EstadoSala }) {
               <div className="min-w-0 flex-1">
               <div className="flex items-start gap-2">
                 <span className="min-w-0 flex-1 truncate text-sm font-extrabold text-tinta-suave">
-                  {r.apelido}
+                  {pessoa?.robo && <SeloRobo />} {r.apelido}
                   {minha && <span className="font-semibold"> (você)</span>}
                 </span>
-                {sala.config.publica && !minha && pessoa && (
+                {sala.config.publica && !minha && pessoa && !pessoa.robo && (
                   <span className="-my-2">
                     <BotaoDenunciar jogador={pessoa} aoDenunciar={acoes.denunciar} />
                   </span>

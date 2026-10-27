@@ -1,6 +1,15 @@
 import { motion } from 'framer-motion';
 import { useState, type FormEvent, type KeyboardEvent } from 'react';
-import { MAX_APELIDO, TAMANHO_CODIGO, apelidoSchema, codigoSchema } from '@rabisco/shared';
+import {
+  DESCRICOES_NIVEL_ROBO,
+  MAX_APELIDO,
+  NIVEIS_ROBO,
+  NOMES_NIVEL_ROBO,
+  TAMANHO_CODIGO,
+  apelidoSchema,
+  codigoSchema,
+  type NivelRobo,
+} from '@rabisco/shared';
 import { AVATARES, Avatar, COLECOES, type ColecaoAvatar } from '../componentes/Avatar';
 import { Icone } from '../componentes/Icone';
 import { Logo } from '../componentes/Logo';
@@ -11,24 +20,31 @@ import { BotaoInstalar } from '../componentes/BotaoInstalar';
 import { Historico } from './Historico';
 import { Ranking } from './Ranking';
 
-type Modo = 'inicio' | 'criar' | 'entrar' | 'jogarAgora' | 'ranking' | 'historico';
-type ModoFormulario = 'criar' | 'entrar' | 'jogarAgora';
+type Modo = 'inicio' | 'criar' | 'entrar' | 'jogarAgora' | 'robos' | 'ranking' | 'historico';
+type ModoFormulario = 'criar' | 'entrar' | 'jogarAgora' | 'robos';
 
 const TITULOS: Record<ModoFormulario, string> = {
   criar: 'Criar sala',
   entrar: 'Entrar na sala',
   jogarAgora: 'Jogar agora',
+  robos: 'Contra robôs',
 };
 
 const BOTOES: Record<ModoFormulario, string> = {
   criar: 'Criar sala',
   entrar: 'Entrar',
   jogarAgora: 'Procurar sala',
+  robos: 'Chamar os robôs',
 };
 
 interface Perfil {
   apelido: string;
   avatar: number;
+}
+
+interface PreferenciaRobos {
+  nivel: NivelRobo;
+  quantos: number;
 }
 
 export function Inicio() {
@@ -89,6 +105,12 @@ export function Inicio() {
               <span className="flex-1 text-left">Jogar agora<small>Encontre uma sala pública</small></span>
               <span className="inicio-seta"><Icone nome="seta" /></span>
             </button>
+            <div className="inicio-divisor"><span>ou treine sozinho</span></div>
+            <button type="button" aria-label="Contra robôs" className="botao botao-menta inicio-acao" onClick={() => setModo('robos')}>
+              <span className="inicio-acao-icone"><Icone nome="robo" /></span>
+              <span className="flex-1 text-left">Contra robôs<small>Fácil, médio ou difícil</small></span>
+              <span className="inicio-seta"><Icone nome="seta" /></span>
+            </button>
           </div>
           <nav className="inicio-links" aria-label="Mais">
             <button type="button" className="chip" onClick={() => setModo('ranking')}>
@@ -128,6 +150,12 @@ function Formulario({ modo, codigoInicial, aoVoltar }: { modo: ModoFormulario; c
   const [codigo, setCodigo] = useState(codigoInicial);
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [robos, setRobos] = useState<PreferenciaRobos>(() => {
+    const salvos = ler<PreferenciaRobos>('robos');
+    return salvos && NIVEIS_ROBO.includes(salvos.nivel) && [1, 2, 3].includes(salvos.quantos)
+      ? salvos
+      : { nivel: 'medio', quantos: 1 };
+  });
 
   function navegarAvatares(evento: KeyboardEvent<HTMLButtonElement>, posicao: number) {
     const grade = evento.currentTarget.parentElement;
@@ -157,12 +185,15 @@ function Formulario({ modo, codigoInicial, aoVoltar }: { modo: ModoFormulario; c
     setErro(null);
     setEnviando(true);
     gravar('perfil', { apelido: apelidoOk.data, avatar } satisfies Perfil);
+    if (modo === 'robos') gravar('robos', robos);
     const falha =
       modo === 'criar'
         ? await acoes.criarSala(apelidoOk.data, avatar)
         : modo === 'jogarAgora'
           ? await acoes.jogarAgora(apelidoOk.data, avatar)
-          : await acoes.entrarSala(codigoOk, apelidoOk.data, avatar);
+          : modo === 'robos'
+            ? await acoes.jogarContraRobos(apelidoOk.data, avatar, robos.nivel, robos.quantos)
+            : await acoes.entrarSala(codigoOk, apelidoOk.data, avatar);
     setEnviando(false);
     if (falha) setErro(falha);
   }
@@ -198,7 +229,68 @@ function Formulario({ modo, codigoInicial, aoVoltar }: { modo: ModoFormulario; c
               Você entra numa sala pública com outras pessoas. Se não tiver nenhuma aberta, uma nova é criada para você.
             </p>
           )}
+          {modo === 'robos' && (
+            <p className="mt-2 font-semibold text-texto-suave">
+              Os robôs pensam, digitam e votam como gente, no tempo de gente. Antes de começar dá para mudar as regras.
+            </p>
+          )}
         </div>
+
+        {modo === 'robos' && (
+          <fieldset className="cartao flex flex-col gap-3 px-4 py-3">
+            <legend className="sr-only">Robôs</legend>
+            <div>
+              <span className="rotulo" id="rotulo-nivel">
+                Nível
+              </span>
+              <div className="mt-1.5 grid grid-cols-3 gap-2" role="radiogroup" aria-labelledby="rotulo-nivel">
+                {NIVEIS_ROBO.map((nivel) => (
+                  <button
+                    key={nivel}
+                    type="button"
+                    role="radio"
+                    aria-checked={robos.nivel === nivel}
+                    onClick={() => setRobos({ ...robos, nivel })}
+                    className={`rounded-2xl border-[3px] px-2 py-2 text-center font-titulo text-lg leading-tight transition ${
+                      robos.nivel === nivel
+                        ? 'border-[#0b1638] bg-amarelo text-[#0b1638] shadow-[0_3px_0_#0b1638]'
+                        : 'border-tinta-suave/30 text-tinta'
+                    }`}
+                  >
+                    {NOMES_NIVEL_ROBO[nivel]}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1.5 text-sm font-semibold text-tinta-suave" aria-live="polite">
+                {DESCRICOES_NIVEL_ROBO[robos.nivel]}
+              </p>
+            </div>
+            <div>
+              <span className="rotulo" id="rotulo-quantos">
+                Quantos robôs
+              </span>
+              <div className="mt-1.5 flex gap-2" role="radiogroup" aria-labelledby="rotulo-quantos">
+                {[1, 2, 3].map((quantos) => (
+                  <button
+                    key={quantos}
+                    type="button"
+                    role="radio"
+                    aria-checked={robos.quantos === quantos}
+                    aria-label={`${quantos} ${quantos === 1 ? 'robô' : 'robôs'}`}
+                    onClick={() => setRobos({ ...robos, quantos })}
+                    className={`grid size-12 place-items-center rounded-2xl border-[3px] font-titulo text-xl transition ${
+                      robos.quantos === quantos
+                        ? 'border-[#0b1638] bg-amarelo text-[#0b1638] shadow-[0_3px_0_#0b1638]'
+                        : 'border-tinta-suave/30 text-tinta'
+                    }`}
+                  >
+                    {quantos}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </fieldset>
+        )}
 
         {modo === 'entrar' && (
           <label className="cartao flex flex-col gap-1 px-4 py-3">

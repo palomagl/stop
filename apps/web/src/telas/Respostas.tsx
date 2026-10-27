@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { DICAS_CATEGORIA, MAX_RESPOSTA, limparTexto, type EstadoSala } from '@rabisco/shared';
 import { Avatar } from '../componentes/Avatar';
+import { SeloRobo } from '../componentes/ListaJogadores';
 import { Cronometro } from '../componentes/Cronometro';
 import { Tela } from '../componentes/Tela';
 import { Tic } from '../componentes/Tic';
@@ -164,7 +165,9 @@ export function Respostas({ sala }: { sala: EstadoSala }) {
             {outros.map((j) => (
               <li key={j.id} className="chip py-0.5 pl-0.5">
                 <Avatar id={j.avatar} tamanho={26} className={`rounded-full ${j.online ? '' : 'opacity-40'}`} />
-                <span className="max-w-24 truncate">{j.apelido}</span>
+                <span className="max-w-24 truncate">
+                  {j.robo && <SeloRobo />} {j.apelido}
+                </span>
                 {j.preenchidas}/{categorias.length}
               </li>
             ))}

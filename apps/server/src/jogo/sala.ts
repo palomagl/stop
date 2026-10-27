@@ -4,8 +4,10 @@ import {
   ALFABETO,
   CONFIG_PADRAO,
   MAX_JOGADORES,
+  MAX_ROBOS,
   MIN_JOGADORES,
   PULOS_DE_LETRA_POR_PARTIDA,
+  TOTAL_AVATARES,
   anuladaPorVotos,
   calcularPosicoes,
   limparTexto,
@@ -20,12 +22,14 @@ import {
   type FolhaCategoria,
   type JogadorPublico,
   type LinhaPlacar,
+  type NivelRobo,
   type Reacao,
   type RespostaEmCorrecao,
   type ResumoPartida,
   type Voto,
 } from '@rabisco/shared';
 import type { PartidaTerminada } from '../arquivo/tipos';
+import { NOMES_DE_ROBO, PREFIXO_ROBO } from '../robos/nomes';
 
 export interface Jogador {
   id: string;
@@ -43,7 +47,10 @@ export interface Jogador {
   participando: boolean;
   stops: number;
   timerFora: ReturnType<typeof setTimeout> | null;
+  /** Nível do robô, ou null para gente de verdade. Robô fica sempre online e não tem socket. */
+  robo: NivelRobo | null;
 }
+
 
 export type MotivoSaida = 'saiu' | 'removido' | 'tempo' | 'denuncias';
 
@@ -55,6 +62,8 @@ interface EventosSala {
   vazia: [];
   /** Partida chegou ao fim com pelo menos uma rodada completa: vai para o histórico. */
   terminou: [PartidaTerminada];
+  /** A sala vai sumir: quem agendou alguma coisa nela precisa cancelar. */
+  destruida: [];
 }
 
 interface CorrecaoInterna {
@@ -145,6 +154,7 @@ export class Sala extends EventEmitter<EventosSala> {
       participando: !this.emPartida(),
       stops: 0,
       timerFora: null,
+      robo: null,
     };
     this.jogadores.set(jogador.id, jogador);
     this.donoId ??= jogador.id;
@@ -152,8 +162,51 @@ export class Sala extends EventEmitter<EventosSala> {
     return jogador;
   }
 
+  /** Quem é dono da sala chama um robô. Ele já chega pronto e com nome e bicho que ninguém usa. */
+  adicionarRobo(quemPede: string, nivel: NivelRobo): string | null {
+    if (quemPede !== this.donoId) return 'Só quem é dono da sala pode chamar robô.';
+    if (this.fase !== 'lobby') return null;
+    if (this.jogadores.size >= MAX_JOGADORES) return 'A sala está cheia.';
+    if (this.robos().length >= MAX_ROBOS) return `Dá para chamar até ${MAX_ROBOS} robôs.`;
+
+    const todos = [...this.jogadores.values()];
+    const apelidos = new Set(todos.map((j) => normalizar(j.apelido)));
+    const nomes = NOMES_DE_ROBO.filter((n) => !apelidos.has(normalizar(n)));
+    const bichos = Array.from({ length: TOTAL_AVATARES }, (_, i) => i).filter((a) => !todos.some((j) => j.avatar === a));
+    const sortear = <T>(lista: T[]) => lista[Math.floor(this.opcoes.aleatorio() * lista.length)];
+
+    const robo: Jogador = {
+      id: randomUUID(),
+      token: randomBytes(24).toString('hex'),
+      apelido: sortear(nomes) ?? `Robô ${this.robos().length + 1}`,
+      avatar: sortear(bichos) ?? 0,
+      dispositivo: `${PREFIXO_ROBO}${randomUUID()}`,
+      online: true,
+      socketId: null,
+      pronto: true,
+      pontos: 0,
+      respostas: new Map(),
+      participando: true,
+      stops: 0,
+      timerFora: null,
+      robo: nivel,
+    };
+    this.jogadores.set(robo.id, robo);
+    this.emit('mudou');
+    return null;
+  }
+
+  robos(): Jogador[] {
+    return [...this.jogadores.values()].filter((j) => j.robo);
+  }
+
+  private pessoas(): Jogador[] {
+    return [...this.jogadores.values()].filter((j) => !j.robo);
+  }
+
+  /** Só gente conta: robô não segura sala aberta. */
   temAlguemOnline(): boolean {
-    return [...this.jogadores.values()].some((j) => j.online);
+    return this.pessoas().some((j) => j.online);
   }
 
   /** Abre a sala para o "Jogar agora". Usado quando ela nasce de lá. */
@@ -162,7 +215,7 @@ export class Sala extends EventEmitter<EventosSala> {
   }
 
   porToken(token: string): Jogador | undefined {
-    return [...this.jogadores.values()].find((j) => j.token === token);
+    return this.pessoas().find((j) => j.token === token);
   }
 
   conectar(jogador: Jogador, socketId: string): void {
@@ -180,7 +233,7 @@ export class Sala extends EventEmitter<EventosSala> {
     jogador.online = false;
     jogador.socketId = null;
     this.agendarFora(jogador);
-    if (![...this.jogadores.values()].some((j) => j.online)) this.semNinguemDesde = Date.now();
+    if (!this.temAlguemOnline()) this.semNinguemDesde = Date.now();
     this.verificarAvanco();
     this.emit('mudou');
   }
@@ -205,13 +258,14 @@ export class Sala extends EventEmitter<EventosSala> {
     if (!this.config.publica) return 'Denúncias valem só em salas públicas.';
     if (quemDenuncia === alvoId || !this.jogadores.has(quemDenuncia)) return null;
     const alvo = this.jogadores.get(alvoId);
-    if (!alvo) return null;
+    // O apelido do robô é escolhido pelo jogo, então não tem o que denunciar.
+    if (!alvo || alvo.robo) return null;
 
     const quem = this.denuncias.get(alvoId) ?? new Set<string>();
     quem.add(quemDenuncia);
     this.denuncias.set(alvoId, quem);
 
-    const necessarias = denunciasNecessarias(this.jogadores.size);
+    const necessarias = denunciasNecessarias(this.pessoas().length);
     console.warn(`Denúncia na sala ${this.codigo}: "${alvo.apelido}" (${quem.size} de ${necessarias})`);
     if (quem.size >= necessarias) this.tirar(alvoId, 'denuncias');
     else this.emit('mudou');
@@ -279,9 +333,9 @@ export class Sala extends EventEmitter<EventosSala> {
     return null;
   }
 
-  /** Pessoas que contam na votação de pular letra: quem joga a rodada e está online. */
+  /** Pessoas que contam na votação de pular letra: quem joga a rodada e está online. Robô não vota. */
   private votantesPular(): Jogador[] {
-    return [...this.jogadores.values()].filter((j) => j.participando && j.online);
+    return this.pessoas().filter((j) => j.participando && j.online);
   }
 
   private pularLetraDisponivel(): boolean {
@@ -362,9 +416,15 @@ export class Sala extends EventEmitter<EventosSala> {
   }
 
   destruir(): void {
+    this.emit('destruida');
     this.limparTimer();
     for (const jogador of this.jogadores.values()) this.limparTimerFora(jogador);
     this.removeAllListeners();
+  }
+
+  /** Todas as respostas da rodada em correção, categoria por categoria (para os robôs julgarem). */
+  respostasEmCorrecao(): readonly (readonly RespostaEmCorrecao[])[] | null {
+    return this.fase === 'correcao' && this.correcao ? this.correcao.porCategoria : null;
   }
 
   // ── Retrato para o navegador ───────────────────────────────────────
@@ -385,6 +445,7 @@ export class Sala extends EventEmitter<EventosSala> {
       preenchidas: this.config.categorias.filter((c) => limparTexto(j.respostas.get(c) ?? '')).length,
       participando: j.participando,
       denunciadoPorMim: this.denuncias.get(j.id)?.has(jogadorId) ?? false,
+      robo: j.robo,
     }));
 
     const correcao = this.fase === 'correcao' && this.correcao ? this.correcao : null;
@@ -434,7 +495,8 @@ export class Sala extends EventEmitter<EventosSala> {
     for (const j of this.jogadores.values()) {
       j.pontos = 0;
       j.stops = 0;
-      j.pronto = false;
+      // Robô volta para a sala já pronto, para não travar o "Começar".
+      j.pronto = Boolean(j.robo);
       j.respostas = new Map();
       j.participando = true;
     }
@@ -678,7 +740,8 @@ export class Sala extends EventEmitter<EventosSala> {
     const esperando = [...this.jogadores.values()].filter(
       (j) => j.online && (this.fase === 'resultado' || j.participando),
     );
-    if (esperando.length === 0 || esperando.some((j) => !prontos.has(j.id))) return;
+    // Sem nenhuma pessoa online, quem manda é o relógio: os robôs não avançam sozinhos.
+    if (!esperando.some((j) => !j.robo) || esperando.some((j) => !prontos.has(j.id))) return;
     if (this.fase === 'correcao') this.avancarCorrecao();
     else this.proximaEtapa();
   }
@@ -694,7 +757,7 @@ export class Sala extends EventEmitter<EventosSala> {
     if (this.donoId === jogadorId) this.passarDono();
     this.emit('removido', jogador, motivo);
 
-    if (this.jogadores.size === 0) {
+    if (this.pessoas().length === 0) {
       this.destruirEAvisar();
       return;
     }
@@ -710,7 +773,7 @@ export class Sala extends EventEmitter<EventosSala> {
   }
 
   private passarDono(): void {
-    const restantes = [...this.jogadores.values()];
+    const restantes = this.pessoas();
     this.donoId = (restantes.find((j) => j.online) ?? restantes[0])?.id ?? null;
   }
 
@@ -725,7 +788,7 @@ export class Sala extends EventEmitter<EventosSala> {
       if (jogador.online || !this.jogadores.has(jogador.id)) return;
       if (this.emPartida()) {
         this.tirar(jogador.id, 'tempo');
-      } else if (this.donoId === jogador.id && [...this.jogadores.values()].some((j) => j.online)) {
+      } else if (this.donoId === jogador.id && this.temAlguemOnline()) {
         this.passarDono();
         this.emit('mudou');
       }

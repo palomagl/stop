@@ -4,6 +4,7 @@ import type {
   ClienteParaServidor,
   Config,
   EstadoSala,
+  NivelRobo,
   Reacao,
   RespostaArquivo,
   RespostaEntrada,
@@ -246,6 +247,13 @@ export const acoes = {
     comAck('sala:entrar', { codigo, apelido, avatar, dispositivo: idDoDispositivo() }),
   jogarAgora: (apelido: string, avatar: number) =>
     comAck('sala:jogarAgora', { apelido, avatar, dispositivo: idDoDispositivo() }),
+  /** Cria uma sala só sua e já chama os robôs. Dá para mudar as regras antes de começar. */
+  async jogarContraRobos(apelido: string, avatar: number, nivel: NivelRobo, quantos: number) {
+    const erro = await acoes.criarSala(apelido, avatar);
+    if (!erro) for (let i = 0; i < quantos; i++) acoes.adicionarRobo(nivel);
+    return erro;
+  },
+  adicionarRobo: (nivel: NivelRobo) => socket.emit('sala:adicionarRobo', { nivel }),
   sair() {
     socket.emit('sala:sair');
     esquecerSala();

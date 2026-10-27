@@ -1,4 +1,5 @@
 import type { LinhaRanking, PartidaNoHistorico } from '@rabisco/shared';
+import { ehRobo } from '../robos/nomes';
 import type { Arquivo, PartidaTerminada } from './tipos';
 
 export class ArquivoEmMemoria implements Arquivo {
@@ -38,7 +39,8 @@ export class ArquivoEmMemoria implements Arquivo {
 
   async ranking(dispositivo: string | null, limite: number): Promise<LinhaRanking[]> {
     const porDispositivo = new Map<string, Omit<LinhaRanking, 'posicao' | 'eu'> & { ultima: number }>();
-    for (const partida of this.partidas) {
+    // Partida contra robô é treino: aparece no histórico, mas não no ranking.
+    for (const partida of this.partidas.filter((p) => !p.jogadores.some((j) => ehRobo(j.dispositivo)))) {
       for (const j of partida.jogadores) {
         const atual = porDispositivo.get(j.dispositivo) ?? {
           apelido: j.apelido,
