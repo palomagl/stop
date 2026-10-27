@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, type KeyboardEvent } from 'react';
 import { MAX_APELIDO, TAMANHO_CODIGO, apelidoSchema, codigoSchema } from '@rabisco/shared';
-import { AVATARES, Avatar } from '../componentes/Avatar';
+import { AVATARES, Avatar, COLECOES, type ColecaoAvatar } from '../componentes/Avatar';
+import { Icone } from '../componentes/Icone';
 import { Logo } from '../componentes/Logo';
 import { Tela } from '../componentes/Tela';
 import { gravar, ler } from '../lib/armazenamento';
@@ -42,43 +43,76 @@ export function Inicio() {
   }
 
   return (
-    <Tela>
-      <div className="flex flex-col items-center pt-4 text-center sm:pt-8">
-        <motion.div
-          initial={{ y: -30, scale: 0.85, opacity: 0 }}
-          animate={{ y: 0, scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 260, damping: 18 }}
-        >
-          <h1>
-            <Logo grande />
-          </h1>
-        </motion.div>
-        <p className="mt-5 max-w-xs text-lg font-bold leading-snug text-texto-suave">
-          Sorteia a letra, todo mundo escreve e quem terminar primeiro grita!
-        </p>
-      </div>
+    <Tela larga>
+      <div className="inicio">
+        <section className="inicio-hero" aria-label="Stopou! Adedonha online">
+          <span className="inicio-etiqueta"><span aria-hidden="true">✦</span> A adedonha da galera</span>
+          <motion.div
+            initial={{ y: -16, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+          >
+            <h1 className="mt-5"><Logo grande /></h1>
+          </motion.div>
+          <p className="mx-auto mt-6 max-w-xs text-lg font-semibold leading-snug text-texto-suave">
+            Uma letra. Mil ideias.<br />Quem terminar primeiro grita STOP!
+          </p>
+          <div className="inicio-turma" aria-hidden="true">
+            {[15, 0, 2, 23, 22].map((id, i) => (
+              <span key={id} style={{ rotate: `${(i - 2) * 7}deg`, translate: `0 ${Math.abs(i - 2) * 5}px` }}>
+                <Avatar id={id} tamanho={58} />
+              </span>
+            ))}
+          </div>
+          <p className="mt-4 text-xs font-bold tracking-wide text-texto-suave">De 2 a 10 pessoas · Sem cadastro · Só diversão</p>
+        </section>
 
-      <div className="mx-auto mt-7 flex max-w-sm flex-col gap-4">
-        <button type="button" className="botao botao-amarelo w-full text-2xl" onClick={() => setModo('criar')}>
-          Criar sala
-        </button>
-        <button type="button" className="botao w-full text-2xl" onClick={() => setModo('entrar')}>
-          Entrar com código
-        </button>
-        <button type="button" className="botao botao-coral w-full text-2xl" onClick={() => setModo('jogarAgora')}>
-          Jogar agora
-          <small>com quem estiver online</small>
-        </button>
-        <nav className="mt-2 flex justify-center gap-3" aria-label="Mais">
-          <button type="button" className="chip px-4 py-2 text-sm hover:bg-white/20" onClick={() => setModo('ranking')}>
-            <span aria-hidden="true">🏆</span> Ranking
-          </button>
-          <button type="button" className="chip px-4 py-2 text-sm hover:bg-white/20" onClick={() => setModo('historico')}>
-            <span aria-hidden="true">📒</span> Minhas partidas
-          </button>
-        </nav>
-        <BotaoInstalar />
+        <section className="inicio-menu" aria-label="Vamos jogar">
+          <div className="mb-5">
+            <p className="inicio-sobretitulo">JUNTA A TURMA</p>
+            <h2 className="titulo mt-1 text-4xl">Bora jogar?</h2>
+          </div>
+          <div className="flex flex-col gap-4">
+            <button type="button" aria-label="Criar sala" className="botao botao-amarelo inicio-acao" onClick={() => setModo('criar')}>
+              <span className="inicio-acao-icone" aria-hidden="true">＋</span>
+              <span className="flex-1 text-left">Criar sala<small>Chame a galera e escolha as regras</small></span>
+              <span className="inicio-seta"><Icone nome="seta" /></span>
+            </button>
+            <button type="button" aria-label="Entrar com código" className="botao inicio-acao" onClick={() => setModo('entrar')}>
+              <span className="inicio-acao-icone" aria-hidden="true">#</span>
+              <span className="flex-1 text-left">Entrar com código<small>Já tem uma sala te esperando?</small></span>
+              <span className="inicio-seta"><Icone nome="seta" /></span>
+            </button>
+            <div className="inicio-divisor"><span>ou conheça uma nova turma</span></div>
+            <button type="button" aria-label="Jogar agora" className="botao botao-coral inicio-acao" onClick={() => setModo('jogarAgora')}>
+              <span className="inicio-acao-icone"><Icone nome="raio" /></span>
+              <span className="flex-1 text-left">Jogar agora<small>Encontre uma sala pública</small></span>
+              <span className="inicio-seta"><Icone nome="seta" /></span>
+            </button>
+          </div>
+          <nav className="inicio-links" aria-label="Mais">
+            <button type="button" className="chip" onClick={() => setModo('ranking')}>
+              <span aria-hidden="true">🏆</span> Ranking
+            </button>
+            <button type="button" className="chip" onClick={() => setModo('historico')}>
+              <span aria-hidden="true">↺</span> Minhas partidas
+            </button>
+          </nav>
+          <BotaoInstalar />
+        </section>
       </div>
+      <ol className="inicio-passos" aria-label="Como jogar">
+        {[
+          ['01', 'Sorteia a letra', 'A mesma para todo mundo.'],
+          ['02', 'Solta as ideias', 'Uma resposta por categoria.'],
+          ['03', 'Grita STOP!', 'Depois, a turma confere e pontua.'],
+        ].map(([numero, titulo, descricao]) => (
+          <li key={numero}>
+            <span className="inicio-passo-numero" aria-hidden="true">{numero}</span>
+            <span><strong>{titulo}</strong><small>{descricao}</small></span>
+          </li>
+        ))}
+      </ol>
     </Tela>
   );
 }
@@ -86,10 +120,29 @@ export function Inicio() {
 function Formulario({ modo, codigoInicial, aoVoltar }: { modo: ModoFormulario; codigoInicial: string; aoVoltar: () => void }) {
   const salvo = ler<Perfil>('perfil');
   const [apelido, setApelido] = useState(salvo?.apelido ?? '');
-  const [avatar, setAvatar] = useState(salvo?.avatar ?? Math.floor(Math.random() * AVATARES.length));
+  const [avatar, setAvatar] = useState(() =>
+    Number.isInteger(salvo?.avatar) && salvo!.avatar >= 0 && salvo!.avatar < AVATARES.length ? salvo!.avatar : 54,
+  );
+  const [colecao, setColecao] = useState<ColecaoAvatar>(AVATARES[avatar]!.colecao);
+  const visiveis = AVATARES.map((personagem, id) => ({ ...personagem, id })).filter((a) => a.colecao === colecao);
   const [codigo, setCodigo] = useState(codigoInicial);
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+
+  function navegarAvatares(evento: KeyboardEvent<HTMLButtonElement>, posicao: number) {
+    const grade = evento.currentTarget.parentElement;
+    if (!grade) return;
+    const colunas = getComputedStyle(grade).gridTemplateColumns.split(' ').length;
+    const passos: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: colunas, ArrowUp: -colunas };
+    let proximo: number;
+    if (evento.key === 'Home') proximo = 0;
+    else if (evento.key === 'End') proximo = visiveis.length - 1;
+    else if (evento.key in passos) proximo = (posicao + passos[evento.key]! + visiveis.length) % visiveis.length;
+    else return;
+    evento.preventDefault();
+    setAvatar(visiveis[proximo]!.id);
+    grade.querySelectorAll<HTMLButtonElement>('button')[proximo]?.focus();
+  }
 
   async function enviar(evento: FormEvent) {
     evento.preventDefault();
@@ -131,13 +184,14 @@ function Formulario({ modo, codigoInicial, aoVoltar }: { modo: ModoFormulario; c
         </div>
       }
     >
-      <form id="form-entrada" onSubmit={enviar} className="flex flex-col gap-4" noValidate>
+      <form id="form-entrada" onSubmit={enviar} className="flex flex-col gap-6" noValidate>
         <div className="flex items-center justify-between">
           <button type="button" className="chip py-1.5 hover:bg-white/20" onClick={aoVoltar}>
             ← Voltar
           </button>
         </div>
         <div>
+          <p className="inicio-sobretitulo mb-2">SEU LUGAR NA BRINCADEIRA</p>
           <h2 className="titulo text-4xl">{TITULOS[modo]}</h2>
           {modo === 'jogarAgora' && (
             <p className="mt-2 font-semibold text-texto-suave">
@@ -186,25 +240,44 @@ function Formulario({ modo, codigoInicial, aoVoltar }: { modo: ModoFormulario; c
 
         <fieldset>
           <legend className="titulo mb-1 text-2xl">Escolha seu bicho</legend>
-          <p className="mb-3 text-sm font-bold text-texto-suave" aria-live="polite">
-            {escolhido.nome}
-          </p>
-          <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-6" role="radiogroup" aria-label="Avatar">
-            {AVATARES.map((a, i) => (
+          <div className="perfil-escolhido mb-5">
+            <Avatar id={avatar} tamanho={44} />
+            <span><span className="block text-xs font-semibold text-texto-suave">Esse é você na partida</span>
+              <strong className="block text-lg leading-tight" aria-live="polite">{escolhido.nome}</strong>
+            </span>
+            <span className="ml-auto text-amarelo" aria-hidden="true">✦</span>
+          </div>
+          <div className="colecoes" role="group" aria-label="Coleção de personagens">
+            {COLECOES.map((grupo) => (
               <button
-                key={a.nome}
+                key={grupo.id}
+                type="button"
+                className="colecao-botao"
+                aria-label={grupo.nome}
+                aria-pressed={colecao === grupo.id}
+                onClick={() => setColecao(grupo.id)}
+              >
+                <strong>{grupo.nome}</strong>
+                <small>{AVATARES.filter((a) => a.colecao === grupo.id).length} personagens</small>
+              </button>
+            ))}
+          </div>
+          <p className="mb-4 text-sm font-semibold text-texto-suave">{COLECOES.find((g) => g.id === colecao)!.descricao}</p>
+          <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-6" role="radiogroup" aria-label="Avatar">
+            {visiveis.map((a, posicao) => (
+              <button
+                key={a.id}
                 type="button"
                 role="radio"
-                aria-checked={avatar === i}
+                aria-checked={avatar === a.id}
                 aria-label={a.nome}
-                onClick={() => setAvatar(i)}
-                className={`rounded-[22%] transition ${
-                  avatar === i
-                    ? 'scale-105 shadow-[0_0_0_3px_#0b1638,0_0_0_7px_var(--amarelo),0_0_22px_var(--amarelo)]'
-                    : 'opacity-90 hover:opacity-100'
-                }`}
+                title={a.nome}
+                tabIndex={avatar === a.id || (!visiveis.some((v) => v.id === avatar) && posicao === 0) ? 0 : -1}
+                onKeyDown={(e) => navegarAvatares(e, posicao)}
+                onClick={() => setAvatar(a.id)}
+                className="avatar-opcao"
               >
-                <Avatar id={i} tamanho={120} className="h-auto w-full" />
+                <Avatar id={a.id} tamanho={120} className="h-auto w-full" />
               </button>
             ))}
           </div>

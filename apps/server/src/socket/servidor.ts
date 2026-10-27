@@ -126,7 +126,7 @@ export async function iniciarServidor(opcoes: OpcoesServidor = {}): Promise<Serv
         if (!socket) return;
         socket.leave(sala.codigo);
         socket.data = {};
-        if (motivo !== 'saiu') socket.emit('jogador:removido');
+        if (motivo !== 'saiu') socket.emit('jogador:removido', { motivo });
       });
       sala.on('vazia', () => pendentes.delete(sala));
       sala.on('terminou', (partida) => {
@@ -243,6 +243,11 @@ export async function iniciarServidor(opcoes: OpcoesServidor = {}): Promise<Serv
       return c?.sala.remover(c.jogador.id, jogadorId);
     });
 
+    ouvir('jogador:denunciar', ({ jogadorId }) => {
+      const c = contexto();
+      return c?.sala.denunciar(c.jogador.id, jogadorId);
+    });
+
     ouvir('jogador:pronto', ({ pronto }) => {
       const c = contexto();
       return c?.sala.marcarPronto(c.jogador.id, pronto);
@@ -266,6 +271,11 @@ export async function iniciarServidor(opcoes: OpcoesServidor = {}): Promise<Serv
     ouvir('rodada:stop', ({ respostas }) => {
       const c = contexto();
       return c?.sala.stop(c.jogador.id, respostas);
+    });
+
+    ouvir('rodada:pularLetra', () => {
+      const c = contexto();
+      return c?.sala.votarPularLetra(c.jogador.id);
     });
 
     ouvir('voto:enviar', ({ indice, jogadorId, voto }) => {

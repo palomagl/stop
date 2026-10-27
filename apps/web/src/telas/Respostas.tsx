@@ -8,6 +8,7 @@ import { Tic } from '../componentes/Tic';
 import { acoes } from '../lib/jogo';
 import { useTempoRestante } from '../lib/relogio';
 import { sons } from '../lib/sons';
+import { vibracoes } from '../lib/vibrar';
 
 /** Espera um pouco depois da última tecla antes de mandar o rascunho. */
 const ESPERA_RASCUNHO_MS = 250;
@@ -50,6 +51,16 @@ export function Respostas({ sala }: { sala: EstadoSala }) {
       setTimeout(() => enviar(categoria), ESPERA_RASCUNHO_MS),
     );
   }
+
+  // Avisa no corpo, além do cronômetro, quando faltam 10 segundos e quando acaba.
+  const segundos = Math.ceil(restante / 1000);
+  useEffect(() => {
+    if (travando || !participando) return;
+    if (segundos === 10) vibracoes.alerta();
+    if (segundos === 0) vibracoes.fim();
+    // Uma vez por segundo, só nos dois momentos.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [segundos]);
 
   // Quando o tempo acaba, manda tudo o que ainda não foi.
   useEffect(() => {
@@ -102,7 +113,7 @@ export function Respostas({ sala }: { sala: EstadoSala }) {
 
   return (
     <>
-      <div className="sticky top-14 z-20 border-b-2 border-white/10 bg-[var(--vidro)] backdrop-blur-md">
+      <div className="barra-rodada sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-20 border-b border-white/10 bg-[var(--vidro)] backdrop-blur-md">
         <div className="mx-auto flex max-w-xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
           <span
             className="grid size-16 shrink-0 place-items-center rounded-full border-[3px] border-[#0b1638] bg-amarelo font-titulo text-5xl leading-none text-[#0b1638] shadow-[0_4px_0_#0b1638]"
@@ -110,11 +121,38 @@ export function Respostas({ sala }: { sala: EstadoSala }) {
           >
             {letra}
           </span>
+          {participando && sala.pularLetra.disponivel && !travando && !fechado && (
+            <button
+              type="button"
+              onClick={acoes.pularLetra}
+              disabled={sala.pularLetra.euVotei}
+              className="chip flex-col gap-0 px-3 py-1 leading-tight transition hover:bg-white/20 active:scale-95 disabled:cursor-default"
+              aria-label={
+                sala.pularLetra.euVotei
+                  ? `Você votou para pular a letra. ${sala.pularLetra.votos} de ${sala.pularLetra.necessarios} votos.`
+                  : `Votar para pular a letra. ${sala.pularLetra.votos} de ${sala.pularLetra.necessarios} votos.`
+              }
+            >
+              <span>{sala.pularLetra.euVotei ? '✓ Votou pular' : '🔄 Pular letra'}</span>
+              <span className="text-[0.7rem] font-bold text-texto-suave">
+                {sala.pularLetra.votos}/{sala.pularLetra.necessarios} votos
+              </span>
+            </button>
+          )}
           <div className="flex flex-col items-end">
             <span className="text-xs font-extrabold uppercase tracking-[0.14em] text-texto-suave">
               Rodada {sala.rodada} de {sala.config.rodadas}
             </span>
             {!travando && <Cronometro terminaEm={sala.terminaEm} grande />}
+          </div>
+        </div>
+        <div className="mx-auto max-w-xl px-4 pb-3 sm:px-6">
+          <div className="mb-1 flex justify-between text-xs font-bold text-texto-suave">
+            <span>{travando ? 'Últimos segundos!' : 'Suas respostas'}</span>
+            <span>{categorias.length - faltando} de {categorias.length}</span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-white/15" aria-hidden="true">
+            <div className="h-full rounded-full bg-amarelo transition-[width] duration-200" style={{ width: `${((categorias.length - faltando) / categorias.length) * 100}%` }} />
           </div>
         </div>
         <AnimatePresence>{travando && <AvisoStop sala={sala} restante={restante} />}</AnimatePresence>
@@ -179,7 +217,10 @@ function AvisoStop({ sala, restante }: { sala: EstadoSala; restante: number }) {
   const numero = Math.max(1, Math.ceil(restante / 1000));
 
   useEffect(() => {
-    if (restante > 0) sons.contagem();
+    if (restante > 0) {
+      sons.contagem();
+      vibracoes.tique();
+    }
     // Toca uma vez por número da contagem.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [numero]);

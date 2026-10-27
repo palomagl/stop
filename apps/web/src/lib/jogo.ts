@@ -14,6 +14,7 @@ import { apagar, gravar, ler } from './armazenamento';
 import { idDoDispositivo } from './dispositivo';
 import { ultimaConfig } from './listas';
 import { sons } from './sons';
+import { vibracoes } from './vibrar';
 
 /** Endereço do servidor. Sem VITE_SERVER_URL, usa o servidor local do `npm run dev`. */
 export const URL_SERVIDOR: string = (import.meta.env.VITE_SERVER_URL ?? 'http://localhost:3333').replace(/\/+$/, '');
@@ -166,7 +167,10 @@ socket.on('sala:estado', (sala) => {
 
 socket.on('sala:erro', ({ mensagem }) => avisar(mensagem));
 
-socket.on('rodada:stop', () => sons.stop());
+socket.on('rodada:stop', () => {
+  sons.stop();
+  vibracoes.stop();
+});
 
 socket.on('reacao', ({ id, jogadorId, emoji }) => {
   const apelido = estado.sala?.jogadores.find((j) => j.id === jogadorId)?.apelido ?? '';
@@ -175,8 +179,15 @@ socket.on('reacao', ({ id, jogadorId, emoji }) => {
   setTimeout(() => mudar({ reacoes: estado.reacoes.filter((r) => r.id !== id) }), 2600);
 });
 
-socket.on('jogador:removido', () => {
-  avisar('Você saiu da sala.');
+const MOTIVO_SAIDA = {
+  removido: 'Quem é dono da sala tirou você da sala.',
+  tempo: 'Você ficou fora por muito tempo e saiu da partida.',
+  denuncias: 'Seu apelido foi denunciado pela sala e você saiu dela.',
+} as const;
+
+socket.on('jogador:removido', (dados) => {
+  // Servidor de versão anterior manda o aviso sem o motivo.
+  avisar(MOTIVO_SAIDA[dados?.motivo ?? 'removido']);
   esquecerSala();
 });
 
@@ -240,11 +251,21 @@ export const acoes = {
   },
   configurar: (config: Config) => socket.emit('sala:configurar', config),
   remover: (jogadorId: string) => socket.emit('sala:remover', { jogadorId }),
+  /** Pergunta antes, porque denúncia não se desfaz. */
+  denunciar(jogador: { id: string; apelido: string }) {
+    const ok = window.confirm(
+      `Denunciar o apelido "${jogador.apelido}"? Se a maioria da sala denunciar, a pessoa sai da sala.`,
+    );
+    if (!ok) return;
+    socket.emit('jogador:denunciar', { jogadorId: jogador.id });
+    avisar('Denúncia enviada. Obrigado por ajudar a manter o jogo legal!');
+  },
   pronto: (pronto: boolean) => socket.emit('jogador:pronto', { pronto }),
   iniciar: () => socket.emit('partida:iniciar'),
   jogarDeNovo: (voltarParaSala: boolean) => socket.emit('partida:jogarDeNovo', { voltarParaSala }),
   rascunho: (categoria: string, texto: string) => socket.emit('resposta:rascunho', { categoria, texto }),
   stop: (respostas: Record<string, string>) => socket.emit('rodada:stop', { respostas }),
+  pularLetra: () => socket.emit('rodada:pularLetra'),
   votar: (indice: number, jogadorId: string, voto: Voto) => socket.emit('voto:enviar', { indice, jogadorId, voto }),
   prontoCorrecao: (indice: number) => socket.emit('correcao:pronto', { indice }),
   prontoResultado: (rodada: number) => socket.emit('resultado:pronto', { rodada }),

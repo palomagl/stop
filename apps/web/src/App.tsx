@@ -50,10 +50,11 @@ function Conteudo() {
     case 'lobby':
       return <Lobby sala={sala} />;
     case 'sorteio':
-      return <Sorteio key={sala.rodada} sala={sala} />;
+      return <Sorteio key={`${sala.rodada}-${sala.letra}`} sala={sala} />;
     case 'respostas':
     case 'travando':
-      return <Respostas key={sala.rodada} sala={sala} />;
+      // A chave muda também quando a sala pula a letra: os campos começam vazios de novo.
+      return <Respostas key={`${sala.rodada}-${sala.letra}`} sala={sala} />;
     case 'correcao':
       return <Correcao sala={sala} />;
     case 'resultado':

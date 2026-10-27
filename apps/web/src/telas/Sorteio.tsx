@@ -49,6 +49,9 @@ export function Sorteio({ sala }: { sala: EstadoSala }) {
         <p className="titulo text-3xl">
           Rodada {sala.rodada} de {sala.config.rodadas}
         </p>
+        {sala.letraPulada && (
+          <p className="chip -mt-3 text-sm">A letra {sala.letraPulada} foi pulada. Sorteando outra!</p>
+        )}
         <motion.div
           key={parou ? 'parou' : 'girando'}
           initial={parou ? { scale: 0.6, rotate: -20 } : false}

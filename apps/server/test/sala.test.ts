@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DURACOES, type Config } from '@rabisco/shared';
-import { Sala, type Jogador } from '../src/jogo/sala';
+import { Sala, denunciasNecessarias, type Jogador } from '../src/jogo/sala';
 
 const CONFIG: Config = {
   categorias: ['Nome', 'Animal'],
@@ -380,5 +380,180 @@ describe('Sala → histórico', () => {
     sala.sair(bia.id);
     expect(sala.fase).toBe('fim');
     expect(terminou).not.toHaveBeenCalled();
+  });
+});
+
+describe('Sala → denúncia de apelido', () => {
+  function salaPublica(pessoas: string[]) {
+    const ctx = novaSala();
+    ctx.sala.configurar(ctx.ana.id, { ...CONFIG, publica: true });
+    const outros = pessoas.map((p) => ctx.entrar(p));
+    return { ...ctx, outros };
+  }
+
+  it('precisa da maioria das outras pessoas, e nunca menos de duas', () => {
+    expect(denunciasNecessarias(2)).toBe(2);
+    expect(denunciasNecessarias(3)).toBe(2);
+    expect(denunciasNecessarias(5)).toBe(2);
+    expect(denunciasNecessarias(6)).toBe(3);
+    expect(denunciasNecessarias(10)).toBe(5);
+  });
+
+  it('tira da sala quem recebe denúncias suficientes', () => {
+    const { sala, ana, bia, outros } = salaPublica(['Caio']);
+    const removido = vi.fn();
+    sala.on('removido', removido);
+    const caio = outros[0]!;
+    sala.denunciar(ana.id, caio.id);
+    expect(sala.jogadores.has(caio.id)).toBe(true);
+    expect(sala.estadoPara(ana.id).jogadores.find((j) => j.id === caio.id)?.denunciadoPorMim).toBe(true);
+    expect(sala.estadoPara(bia.id).jogadores.find((j) => j.id === caio.id)?.denunciadoPorMim).toBe(false);
+    sala.denunciar(bia.id, caio.id);
+    expect(sala.jogadores.has(caio.id)).toBe(false);
+    expect(removido).toHaveBeenCalledWith(expect.objectContaining({ id: caio.id }), 'denuncias');
+  });
+
+  it('a mesma pessoa denunciando duas vezes conta uma só', () => {
+    const { sala, ana, outros } = salaPublica(['Caio']);
+    const caio = outros[0]!;
+    sala.denunciar(ana.id, caio.id);
+    sala.denunciar(ana.id, caio.id);
+    expect(sala.jogadores.has(caio.id)).toBe(true);
+  });
+
+  it('ninguém se denuncia', () => {
+    const { sala, ana, bia } = salaPublica([]);
+    sala.denunciar(ana.id, ana.id);
+    sala.denunciar(bia.id, ana.id);
+    expect(sala.jogadores.has(ana.id)).toBe(true);
+  });
+
+  it('não vale em sala particular', () => {
+    const { sala, ana, bia } = novaSala();
+    expect(sala.denunciar(ana.id, bia.id)).toMatch(/salas públicas/);
+  });
+
+  it('denúncias de quem saiu da sala deixam de contar', () => {
+    const { sala, ana, bia, outros } = salaPublica(['Caio', 'Duda']);
+    const [caio, duda] = outros as [Jogador, Jogador];
+    sala.denunciar(bia.id, caio.id);
+    sala.sair(bia.id);
+    sala.denunciar(ana.id, caio.id);
+    expect(sala.jogadores.has(caio.id)).toBe(true);
+    sala.denunciar(duda.id, caio.id);
+    expect(sala.jogadores.has(caio.id)).toBe(false);
+  });
+});
+
+describe('Sala → pular letra', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it('com duas pessoas, as duas precisam votar; a letra troca e a rodada não', () => {
+    let n = 0;
+    const { sala, ana, bia } = novaSala(() => (n++ === 0 ? 0 : 0.5));
+    comecar(sala, ana, [bia]);
+    expect(sala.letra).toBe('A');
+    responder(sala, bia, { Nome: 'Alice' });
+
+    sala.votarPularLetra(ana.id);
+    expect(sala.estadoPara(bia.id).pularLetra).toMatchObject({ votos: 1, necessarios: 2, euVotei: false });
+    expect(sala.fase).toBe('respostas');
+
+    sala.votarPularLetra(bia.id);
+    expect(sala.fase).toBe('sorteio');
+    expect(sala.rodada).toBe(1);
+    expect(sala.letra).not.toBe('A');
+    expect(sala.letrasUsadas).toContain('A');
+    const estado = sala.estadoPara(bia.id);
+    expect(estado.letraPulada).toBe('A');
+    expect(estado.minhasRespostas).toEqual({});
+
+    vi.advanceTimersByTime(DURACOES.sorteio);
+    expect(sala.fase).toBe('respostas');
+    expect(sala.terminaEm).toBe(Date.now() + CONFIG.tempoRodadaSeg * 1000);
+  });
+
+  it('com três pessoas, dois votos bastam', () => {
+    const { sala, ana, bia, entrar } = novaSala();
+    const caio = entrar('Caio');
+    comecar(sala, ana, [bia, caio]);
+    sala.votarPularLetra(ana.id);
+    sala.votarPularLetra(ana.id);
+    expect(sala.fase).toBe('respostas');
+    sala.votarPularLetra(caio.id);
+    expect(sala.fase).toBe('sorteio');
+  });
+
+  it('só uma vez por partida', () => {
+    const { sala, ana, bia } = novaSala();
+    comecar(sala, ana, [bia]);
+    sala.votarPularLetra(ana.id);
+    sala.votarPularLetra(bia.id);
+    vi.advanceTimersByTime(DURACOES.sorteio);
+    expect(sala.estadoPara(ana.id).pularLetra.disponivel).toBe(false);
+    expect(sala.votarPularLetra(ana.id)).toMatch(/Não dá mais/);
+  });
+
+  it('não vale depois do STOP', () => {
+    const { sala, ana, bia } = novaSala();
+    comecar(sala, ana, [bia]);
+    sala.stop(ana.id, { Nome: 'Ana', Animal: 'Arara' });
+    sala.votarPularLetra(ana.id);
+    sala.votarPularLetra(bia.id);
+    expect(sala.fase).toBe('travando');
+  });
+
+  it('não deixa pular se faltaria letra para as próximas rodadas', () => {
+    const { sala, ana, bia } = novaSala();
+    // 2 rodadas e só 2 letras no sorteio: não sobra nenhuma para trocar.
+    sala.configurar(ana.id, { ...CONFIG, letrasExcluidas: 'CDEFGHIJKLMNOPQRSTUVWXYZ'.split('') });
+    comecar(sala, ana, [bia]);
+    expect(sala.estadoPara(ana.id).pularLetra.disponivel).toBe(false);
+  });
+
+  it('volta a ter um pulo numa partida nova', () => {
+    const { sala, ana, bia } = novaSala();
+    sala.configurar(ana.id, { ...CONFIG, rodadas: 1 });
+    comecar(sala, ana, [bia]);
+    sala.votarPularLetra(ana.id);
+    sala.votarPularLetra(bia.id);
+    vi.advanceTimersByTime(DURACOES.sorteio);
+    sala.stop(ana.id, { Nome: `${sala.letra}a`, Animal: `${sala.letra}b` });
+    vi.advanceTimersByTime(DURACOES.trava);
+    for (let c = 0; c < CONFIG.categorias.length; c++) for (const j of [ana, bia]) sala.prontoCorrecao(j.id, c);
+    for (const j of [ana, bia]) sala.prontoResultado(j.id, 1);
+    expect(sala.fase).toBe('fim');
+    sala.jogarDeNovo(ana.id, false);
+    vi.advanceTimersByTime(DURACOES.sorteio);
+    expect(sala.estadoPara(ana.id).pularLetra.disponivel).toBe(true);
+  });
+});
+
+describe('Sala → folha da rodada', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it('manda todas as respostas com os pontos de cada uma', () => {
+    const { sala, ana, bia } = novaSala();
+    comecar(sala, ana, [bia]);
+    responder(sala, ana, { Nome: 'Alice', Animal: 'Arara' });
+    responder(sala, bia, { Nome: 'alice', Animal: 'Anta' });
+    sala.stop(ana.id, {});
+    vi.advanceTimersByTime(DURACOES.trava);
+    for (const j of [ana, bia]) sala.prontoCorrecao(j.id, 0);
+    sala.votar(ana.id, 1, bia.id, 'nao');
+    for (const j of [ana, bia]) sala.prontoCorrecao(j.id, 1);
+
+    const folha = sala.estadoPara(bia.id).resultado!.folha;
+    expect(folha.map((f) => f.categoria)).toEqual(['Nome', 'Animal']);
+    expect(folha[0]!.respostas.map((r) => [r.apelido, r.texto, r.pontos, r.anulada])).toEqual([
+      ['Ana', 'Alice', 5, false],
+      ['Bia', 'alice', 5, false],
+    ]);
+    expect(folha[1]!.respostas.map((r) => [r.apelido, r.texto, r.pontos, r.anulada])).toEqual([
+      ['Ana', 'Arara', 10, false],
+      ['Bia', 'Anta', 0, true],
+    ]);
   });
 });

@@ -18,7 +18,7 @@ export function Historico({ aoVoltar }: { aoVoltar: () => void }) {
       <EstadoArquivo estado={estado}>
         {(partidas) =>
           partidas.length === 0 ? (
-            <p className="titulo text-2xl">Nenhuma partida terminada por aqui ainda.</p>
+            <div className="cartao px-6 py-10 text-center"><span className="mb-3 block text-4xl" aria-hidden="true">✦</span><p className="font-titulo text-2xl text-tinta">Nenhuma partida terminada por aqui ainda.</p></div>
           ) : (
             <ul className="flex flex-col gap-3">
               {partidas.map((p) => (

@@ -7,8 +7,10 @@ import {
   MAX_RODADAS,
   MIN_JOGADORES,
   MIN_RODADAS,
+  PACOTES,
   configSchema,
   normalizar,
+  pacoteDasCategorias,
   type Config,
   type EstadoSala,
   type JogadorPublico,
@@ -63,7 +65,12 @@ export function Lobby({ sala }: { sala: EstadoSala }) {
         <h2 id="titulo-jogadores" className="titulo mb-3 text-3xl">
           Quem está na sala ({sala.jogadores.length}/10)
         </h2>
-        <ListaJogadores jogadores={sala.jogadores} meuId={sala.meuId} aoRemover={souDono ? remover : undefined} />
+        <ListaJogadores
+          jogadores={sala.jogadores}
+          meuId={sala.meuId}
+          aoRemover={souDono ? remover : undefined}
+          aoDenunciar={sala.config.publica ? acoes.denunciar : undefined}
+        />
       </section>
 
       <section className="mt-8" aria-labelledby="titulo-config">
@@ -116,14 +123,15 @@ function Convite({ codigo }: { codigo: string }) {
   }
 
   return (
-    <section className="cartao relative p-5 text-center" aria-labelledby="titulo-codigo">
+    <section className="cartao convite relative p-5 text-center" aria-labelledby="titulo-codigo">
       <h2 id="titulo-codigo" className="rotulo">
         Código da sala
       </h2>
       <p className="my-1 font-titulo text-6xl tracking-[0.2em] text-tinta sm:text-7xl" aria-label={codigo.split('').join(' ')}>
         {codigo}
       </p>
-      <div className="mt-3 flex flex-wrap justify-center gap-2">
+      <p className="text-sm font-semibold text-tinta-suave">Uma sala, uma turma, muitas ideias.</p>
+      <div className="mt-4 flex flex-wrap justify-center gap-2">
         <button type="button" className="botao botao-pequeno" onClick={copiar}>
           Copiar link
         </button>
@@ -161,6 +169,14 @@ function ResumoConfig({ config }: { config: Config }) {
       </p>
       <div>
         <strong>Categorias ({config.categorias.length}):</strong>
+        {(() => {
+          const pacote = pacoteDasCategorias(config.categorias);
+          return pacote ? (
+            <span className="ml-1 font-bold text-tinta-suave">
+              pacote {pacote.emoji} {pacote.nome}
+            </span>
+          ) : null;
+        })()}
         <ul className="mt-2 flex flex-wrap gap-2">
           {config.categorias.map((c) => (
             <li key={c} className="rounded-full bg-cartao-2 px-3 py-1 font-bold">
@@ -183,6 +199,7 @@ function EditorConfig({ config }: { config: Config }) {
   const [novaCategoria, setNovaCategoria] = useState('');
   const [nomeLista, setNomeLista] = useState('');
   const listas = useListas();
+  const pacoteAtual = pacoteDasCategorias(config.categorias);
   const todasCategorias = [...CATEGORIAS_PADRAO, ...config.categorias.filter((c) => !CATEGORIAS_PADRAO.includes(c))];
 
   /** Confere localmente com o mesmo schema do servidor antes de mandar. */
@@ -232,7 +249,7 @@ function EditorConfig({ config }: { config: Config }) {
   }
 
   return (
-    <div className="cartao space-y-6 p-4">
+    <div className="cartao config-editor space-y-6 p-4 sm:p-5">
       <label className="flex items-center justify-between gap-4">
         <span>
           <span className="rotulo block">Sala pública</span>
@@ -241,11 +258,42 @@ function EditorConfig({ config }: { config: Config }) {
         <input
           type="checkbox"
           role="switch"
-          className="size-7 shrink-0 accent-[var(--coral)]"
+          className="shrink-0"
           checked={config.publica}
           onChange={(e) => salvar({ ...config, publica: e.target.checked })}
         />
       </label>
+
+      <div>
+        <h3 className="rotulo mb-2">Pacotes prontos</h3>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {PACOTES.map((pacote) => {
+            const ativo = pacoteAtual?.id === pacote.id;
+            return (
+              <button
+                key={pacote.id}
+                type="button"
+                aria-pressed={ativo}
+                onClick={() => usarLista(pacote.categorias)}
+                title={pacote.categorias.join(', ')}
+                className={`flex items-center gap-2 rounded-2xl border-2 px-2.5 py-2 text-left transition active:scale-95 ${
+                  ativo
+                    ? 'border-[#0b1638] bg-amarelo text-[#0b1638] shadow-[0_3px_0_#0b1638]'
+                    : 'border-tinta-suave/40 hover:bg-black/5'
+                }`}
+              >
+                <span className="text-2xl" aria-hidden="true">
+                  {pacote.emoji}
+                </span>
+                <span className="min-w-0 leading-tight">
+                  <span className="block font-extrabold">{pacote.nome}</span>
+                  <span className="block text-xs font-semibold opacity-75">{pacote.descricao}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {listas.length > 0 && (
         <div>
@@ -302,7 +350,7 @@ function EditorConfig({ config }: { config: Config }) {
           })}
         </div>
         <form onSubmit={adicionarCategoria} className="mt-3 flex items-end gap-2">
-          <label className="flex flex-1 flex-col">
+          <label className="flex min-w-0 flex-1 flex-col">
             <span className="text-sm font-bold">Nova categoria</span>
             <input
               className="campo text-xl"
@@ -317,7 +365,7 @@ function EditorConfig({ config }: { config: Config }) {
           </button>
         </form>
         <form onSubmit={guardarLista} className="mt-3 flex items-end gap-2">
-          <label className="flex flex-1 flex-col">
+          <label className="flex min-w-0 flex-1 flex-col">
             <span className="text-sm font-bold">Salvar estas categorias como lista</span>
             <input
               className="campo text-xl"

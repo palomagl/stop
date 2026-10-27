@@ -71,6 +71,7 @@ export const esquemasCliente = {
   'sala:sair': z.undefined().optional(),
   'sala:configurar': configSchema,
   'sala:remover': z.object({ jogadorId: idSchema }),
+  'jogador:denunciar': z.object({ jogadorId: idSchema }),
   'jogador:pronto': z.object({ pronto: z.boolean() }),
   'partida:iniciar': z.undefined().optional(),
   'partida:jogarDeNovo': z.object({ voltarParaSala: z.boolean() }),
@@ -78,6 +79,7 @@ export const esquemasCliente = {
   'rodada:stop': z.object({
     respostas: z.record(z.string().max(MAX_CATEGORIA), z.string().max(MAX_RESPOSTA)),
   }),
+  'rodada:pularLetra': z.undefined().optional(),
   'voto:enviar': z.object({
     indice: z.number().int().min(0),
     jogadorId: idSchema,
