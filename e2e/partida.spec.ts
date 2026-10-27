@@ -4,6 +4,7 @@ async function criarSala(pagina: Page, apelido: string) {
   await pagina.goto('/');
   await pagina.getByRole('button', { name: 'Criar sala' }).click();
   await pagina.getByLabel('Seu apelido').fill(apelido);
+  await pagina.getByRole('button', { name: 'Tradicionais', exact: true }).click();
   await pagina.getByRole('radio', { name: 'Gato' }).click();
   await pagina.getByRole('button', { name: 'Criar sala' }).click();
   await expect(pagina.getByText('Código da sala', { exact: true })).toBeVisible();
@@ -15,6 +16,7 @@ async function entrarPorCodigo(pagina: Page, codigo: string, apelido: string) {
   await pagina.getByRole('button', { name: 'Entrar com código' }).click();
   await pagina.getByLabel('Código da sala').fill(codigo);
   await pagina.getByLabel('Seu apelido').fill(apelido);
+  await pagina.getByRole('button', { name: 'Tradicionais', exact: true }).click();
   await pagina.getByRole('radio', { name: 'Panda' }).click();
   await pagina.getByRole('button', { name: 'Entrar', exact: true }).click();
 }
@@ -165,7 +167,8 @@ test('seleção pelo teclado e sala sem cortes em tela estreita', async ({ page 
   await page.setViewportSize({ width: 320, height: 740 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Criar sala', exact: true }).click();
-  await page.getByRole('radio', { checked: true }).press('End');
+  await page.getByRole('button', { name: 'Tradicionais', exact: true }).click();
+  await page.getByRole('radio', { name: 'Caramelo', exact: true }).press('End');
   await expect(page.getByRole('radio', { name: 'Dragão', exact: true })).toHaveAttribute('aria-checked', 'true');
   await expect(page.getByRole('radio', { name: 'Dragão', exact: true })).toBeFocused();
   await page.getByRole('radio', { name: 'Dragão', exact: true }).press('Home');
@@ -182,4 +185,26 @@ test('seleção pelo teclado e sala sem cortes em tela estreita', async ({ page 
   await page.getByRole('switch').click();
   await expect(page.getByRole('switch')).toBeChecked();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+
+test('três coleções mantêm IDs e a escolha após reconectar', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Criar sala', exact: true }).click();
+  for (const [colecao, quantidade] of [['Divertidos', 30], ['Tradicionais', 24], ['Extras', 30]] as const) {
+    await page.getByRole('button', { name: colecao, exact: true }).click();
+    await expect(page.getByRole('radio')).toHaveCount(quantidade);
+    await page.getByRole('radiogroup').locator('img').evaluateAll((imgs) => Promise.all(imgs.map((img) => (img as HTMLImageElement).decode())));
+  }
+  await page.getByRole('button', { name: 'Divertidos', exact: true }).click();
+  await page.getByRole('radio', { name: 'Planeta', exact: true }).click();
+  await page.getByRole('button', { name: 'Tradicionais', exact: true }).click();
+  await page.getByRole('button', { name: 'Divertidos', exact: true }).click();
+  await expect(page.getByRole('radio', { name: 'Planeta', exact: true })).toHaveAttribute('aria-checked', 'true');
+  await page.getByLabel('Seu apelido').fill('Astral');
+  await page.getByRole('button', { name: 'Criar sala', exact: true }).click();
+  await expect(page.getByText('Código da sala', { exact: true })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Planeta', exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('img', { name: 'Planeta', exact: true })).toBeVisible();
 });

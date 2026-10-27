@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { useState, type FormEvent, type KeyboardEvent } from 'react';
 import { MAX_APELIDO, TAMANHO_CODIGO, apelidoSchema, codigoSchema } from '@rabisco/shared';
-import { AVATARES, Avatar } from '../componentes/Avatar';
+import { AVATARES, Avatar, COLECOES, type ColecaoAvatar } from '../componentes/Avatar';
 import { Icone } from '../componentes/Icone';
 import { Logo } from '../componentes/Logo';
 import { Tela } from '../componentes/Tela';
@@ -120,23 +120,27 @@ export function Inicio() {
 function Formulario({ modo, codigoInicial, aoVoltar }: { modo: ModoFormulario; codigoInicial: string; aoVoltar: () => void }) {
   const salvo = ler<Perfil>('perfil');
   const [apelido, setApelido] = useState(salvo?.apelido ?? '');
-  const [avatar, setAvatar] = useState(salvo?.avatar ?? Math.floor(Math.random() * AVATARES.length));
+  const [avatar, setAvatar] = useState(() =>
+    Number.isInteger(salvo?.avatar) && salvo!.avatar >= 0 && salvo!.avatar < AVATARES.length ? salvo!.avatar : 54,
+  );
+  const [colecao, setColecao] = useState<ColecaoAvatar>(AVATARES[avatar]!.colecao);
+  const visiveis = AVATARES.map((personagem, id) => ({ ...personagem, id })).filter((a) => a.colecao === colecao);
   const [codigo, setCodigo] = useState(codigoInicial);
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
-  function navegarAvatares(evento: KeyboardEvent<HTMLButtonElement>, indice: number) {
+  function navegarAvatares(evento: KeyboardEvent<HTMLButtonElement>, posicao: number) {
     const grade = evento.currentTarget.parentElement;
     if (!grade) return;
     const colunas = getComputedStyle(grade).gridTemplateColumns.split(' ').length;
     const passos: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: colunas, ArrowUp: -colunas };
     let proximo: number;
     if (evento.key === 'Home') proximo = 0;
-    else if (evento.key === 'End') proximo = AVATARES.length - 1;
-    else if (evento.key in passos) proximo = (indice + passos[evento.key]! + AVATARES.length) % AVATARES.length;
+    else if (evento.key === 'End') proximo = visiveis.length - 1;
+    else if (evento.key in passos) proximo = (posicao + passos[evento.key]! + visiveis.length) % visiveis.length;
     else return;
     evento.preventDefault();
-    setAvatar(proximo);
+    setAvatar(visiveis[proximo]!.id);
     grade.querySelectorAll<HTMLButtonElement>('button')[proximo]?.focus();
   }
 
@@ -243,21 +247,37 @@ function Formulario({ modo, codigoInicial, aoVoltar }: { modo: ModoFormulario; c
             </span>
             <span className="ml-auto text-amarelo" aria-hidden="true">✦</span>
           </div>
-          <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-6" role="radiogroup" aria-label="Avatar">
-            {AVATARES.map((a, i) => (
+          <div className="colecoes" role="group" aria-label="Coleção de personagens">
+            {COLECOES.map((grupo) => (
               <button
-                key={a.nome}
+                key={grupo.id}
+                type="button"
+                className="colecao-botao"
+                aria-label={grupo.nome}
+                aria-pressed={colecao === grupo.id}
+                onClick={() => setColecao(grupo.id)}
+              >
+                <strong>{grupo.nome}</strong>
+                <small>{AVATARES.filter((a) => a.colecao === grupo.id).length} personagens</small>
+              </button>
+            ))}
+          </div>
+          <p className="mb-4 text-sm font-semibold text-texto-suave">{COLECOES.find((g) => g.id === colecao)!.descricao}</p>
+          <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-6" role="radiogroup" aria-label="Avatar">
+            {visiveis.map((a, posicao) => (
+              <button
+                key={a.id}
                 type="button"
                 role="radio"
-                aria-checked={avatar === i}
+                aria-checked={avatar === a.id}
                 aria-label={a.nome}
                 title={a.nome}
-                tabIndex={avatar === i ? 0 : -1}
-                onKeyDown={(e) => navegarAvatares(e, i)}
-                onClick={() => setAvatar(i)}
+                tabIndex={avatar === a.id || (!visiveis.some((v) => v.id === avatar) && posicao === 0) ? 0 : -1}
+                onKeyDown={(e) => navegarAvatares(e, posicao)}
+                onClick={() => setAvatar(a.id)}
                 className="avatar-opcao"
               >
-                <Avatar id={i} tamanho={120} className="h-auto w-full" />
+                <Avatar id={a.id} tamanho={120} className="h-auto w-full" />
               </button>
             ))}
           </div>

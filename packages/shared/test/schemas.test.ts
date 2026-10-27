@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { CONFIG_PADRAO } from '../src/constantes';
+import { CONFIG_PADRAO, TOTAL_AVATARES } from '../src/constantes';
 import { contemPalavrao } from '../src/palavroes';
-import { apelidoSchema, codigoSchema, configSchema, esquemasCliente } from '../src/schemas';
+import { apelidoSchema, avatarSchema, codigoSchema, configSchema, esquemasCliente } from '../src/schemas';
 
 describe('apelido', () => {
   it('aceita e arruma espaços', () => {
@@ -62,5 +62,14 @@ describe('eventos', () => {
 
   it('recusa reação fora da lista', () => {
     expect(esquemasCliente['reacao:enviar'].safeParse({ emoji: '💩' }).success).toBe(false);
+  });
+});
+
+
+describe('personagens das três coleções', () => {
+  it('aceita os IDs antigos e os novos e recusa fora do catálogo', () => {
+    expect(TOTAL_AVATARES).toBe(84);
+    for (let avatar = 0; avatar < 84; avatar++) expect(avatarSchema.safeParse(avatar).success).toBe(true);
+    for (const avatar of [-1, 84, 0.5]) expect(avatarSchema.safeParse(avatar).success).toBe(false);
   });
 });

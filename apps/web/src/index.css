@@ -506,3 +506,24 @@ body {
 @media (max-width: 480px) {
   .cabecalho[data-em-sala='true'] [aria-label='Stopou!'] > span { display: none; }
 }
+
+@layer components {
+  .colecoes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin-bottom: 0.75rem; }
+  .colecao-botao {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    min-height: 3.5rem;
+    padding: 0.5rem 0.15rem;
+    border: 1px solid rgb(255 255 255 / 0.2);
+    border-radius: 14px;
+    background: rgb(255 255 255 / 0.06);
+    color: var(--texto-suave);
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .colecao-botao strong { font-size: 0.85rem; }
+  .colecao-botao small { font-size: 0.65rem; font-weight: 600; }
+  .colecao-botao[aria-pressed='true'] { background: var(--amarelo); color: #0b1638; border-color: #0b1638; box-shadow: 0 3px 0 #0b1638; }
+}

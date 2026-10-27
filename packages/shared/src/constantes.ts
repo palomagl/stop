@@ -13,7 +13,7 @@ export const MIN_RODADAS = 1;
 export const MAX_RODADAS = 15;
 export const MIN_TEMPO_RODADA = 30;
 export const MAX_TEMPO_RODADA = 300;
-export const TOTAL_AVATARES = 24;
+export const TOTAL_AVATARES = 84;
 
 export const TAMANHO_CODIGO = 5;
 /** Sem I, L, O e Q: letras que se confundem quando o código é ditado ou lido rápido. */
