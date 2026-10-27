@@ -28,6 +28,8 @@ export interface ClienteParaServidor {
   'partida:jogarDeNovo': (dados: { voltarParaSala: boolean }) => void;
   'resposta:rascunho': (dados: { categoria: string; texto: string }) => void;
   'rodada:stop': (dados: { respostas: Record<string, string> }) => void;
+  /** Voto para sortear outra letra (uma vez por partida, precisa da maioria). */
+  'rodada:pularLetra': () => void;
   'voto:enviar': (dados: { indice: number; jogadorId: string; voto: Voto }) => void;
   'correcao:pronto': (dados: { indice: number }) => void;
   'resultado:pronto': (dados: { rodada: number }) => void;

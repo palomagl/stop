@@ -61,9 +61,9 @@ O servidor sempre manda o **retrato completo da sala** (`sala:estado`), já filt
 | `sala:criar`, `sala:entrar`, `sala:reconectar` (com confirmação) | `sala:estado`: retrato completo |
 | `sala:sair`, `sala:configurar`, `sala:remover`, `jogador:pronto` | `sala:erro`: mensagem para mostrar |
 | `partida:iniciar`, `partida:jogarDeNovo` | `rodada:stop`: quem apertou, para o apito |
-| `resposta:rascunho`, `rodada:stop` | `reacao`: emoji flutuante |
+| `resposta:rascunho`, `rodada:stop`, `rodada:pularLetra` | `reacao`: emoji flutuante |
 | `voto:enviar`, `correcao:pronto`, `resultado:pronto`, `reacao:enviar` | `jogador:removido` |
-| `sala:jogarAgora` (com confirmação) | |
+| `sala:jogarAgora` (com confirmação), `jogador:denunciar` | |
 
 Fora do Socket.IO, há três rotas HTTP:
 
@@ -129,6 +129,14 @@ Para jogar entre amigos, criar conta seria só atrito. Então cada aparelho ganh
 ### Listas de categorias no aparelho
 
 As listas salvas ficam no `localStorage` de quem é dono da sala, e não no banco. Elas funcionam sem cadastro e sem servidor, e cada pessoa tem as suas. A troca é que elas não acompanham você para outro celular.
+
+### Pular letra
+
+Letra difícil (tipo Y numa sala sem K, W, Y e X excluídos) acontece. Durante as respostas, cada pessoa pode votar para pular; com a **maioria de quem está jogando a rodada** (as duas, se forem só duas), o servidor sorteia outra letra e a rodada recomeça com tempo cheio e campos vazios. Vale **uma vez por partida**, só antes do STOP, e só se sobrar letra para as próximas rodadas. A letra pulada não volta.
+
+### Folha da rodada e pódio
+
+No fim de cada rodada o servidor manda, além do placar, a **folha**: cada categoria com a resposta de cada pessoa, os pontos e se foi anulada. No fim da partida o pódio aparece com suspense (rufar de tambor, depois 3º, 2º e 1º, cada bicho caindo no seu degrau); dá para pular, e quem desativou animações vê tudo de uma vez.
 
 ### Denúncia de apelido
 

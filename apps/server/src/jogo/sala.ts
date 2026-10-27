@@ -5,6 +5,7 @@ import {
   CONFIG_PADRAO,
   MAX_JOGADORES,
   MIN_JOGADORES,
+  PULOS_DE_LETRA_POR_PARTIDA,
   anuladaPorVotos,
   calcularPosicoes,
   limparTexto,
@@ -16,6 +17,7 @@ import {
   type EstadoSala,
   type Fase,
   type FimDePartida,
+  type FolhaCategoria,
   type JogadorPublico,
   type LinhaPlacar,
   type Reacao,
@@ -103,13 +105,16 @@ export class Sala extends EventEmitter<EventosSala> {
 
   private timer: ReturnType<typeof setTimeout> | null = null;
   private correcao: CorrecaoInterna | null = null;
-  private resultado: { linhas: LinhaPlacar[]; prontos: Set<string> } | null = null;
+  private resultado: { linhas: LinhaPlacar[]; folha: FolhaCategoria[]; prontos: Set<string> } | null = null;
   private fim: FimDePartida | null = null;
   private historico: RegistroResposta[] = [];
   private rodadasCompletas = 0;
   private ultimaReacao = new Map<string, number>();
   /** Quem denunciou cada pessoa (id denunciado → ids de quem denunciou). */
   private denuncias = new Map<string, Set<string>>();
+  private pulosRestantes = PULOS_DE_LETRA_POR_PARTIDA;
+  private votosPular = new Set<string>();
+  private letraPulada: string | null = null;
 
   constructor(
     codigo: string,
@@ -274,6 +279,33 @@ export class Sala extends EventEmitter<EventosSala> {
     return null;
   }
 
+  /** Pessoas que contam na votação de pular letra: quem joga a rodada e está online. */
+  private votantesPular(): Jogador[] {
+    return [...this.jogadores.values()].filter((j) => j.participando && j.online);
+  }
+
+  private pularLetraDisponivel(): boolean {
+    // Sobra letra para a troca sem faltar para as próximas rodadas.
+    const rodadasDepois = this.config.rodadas - this.rodada;
+    return this.fase === 'respostas' && this.pulosRestantes > 0 && this.letrasDisponiveis().length > rodadasDepois;
+  }
+
+  votarPularLetra(jogadorId: string): string | null {
+    const jogador = this.jogadores.get(jogadorId);
+    if (!jogador?.participando || this.fase !== 'respostas') return null;
+    if (!this.pularLetraDisponivel()) return 'Não dá mais para pular a letra nesta partida.';
+    this.votosPular.add(jogadorId);
+    const necessarios = Math.floor(this.votantesPular().length / 2) + 1;
+    if (this.votosPular.size >= necessarios) {
+      this.pulosRestantes--;
+      this.letraPulada = this.letra;
+      this.sortearLetra();
+      return null;
+    }
+    this.emit('mudou');
+    return null;
+  }
+
   // ── Correção ───────────────────────────────────────────────────────
 
   votar(jogadorId: string, indice: number, alvoId: string, voto: Voto): string | null {
@@ -369,6 +401,13 @@ export class Sala extends EventEmitter<EventosSala> {
       terminaEm: this.terminaEm,
       agora: Date.now(),
       stopPor: this.stopPor,
+      letraPulada: this.letraPulada,
+      pularLetra: {
+        disponivel: this.pularLetraDisponivel(),
+        votos: this.votosPular.size,
+        necessarios: Math.floor(this.votantesPular().length / 2) + 1,
+        euVotei: this.votosPular.has(jogadorId),
+      },
       minhasRespostas: eu ? Object.fromEntries(eu.respostas) : {},
       correcao: correcao && {
         indice: correcao.indice,
@@ -378,7 +417,7 @@ export class Sala extends EventEmitter<EventosSala> {
       },
       resultado:
         this.fase === 'resultado' && this.resultado
-          ? { linhas: this.resultado.linhas, prontos: [...this.resultado.prontos] }
+          ? { linhas: this.resultado.linhas, folha: this.resultado.folha, prontos: [...this.resultado.prontos] }
           : null,
       fim: this.fase === 'fim' ? this.fim : null,
     };
@@ -408,6 +447,7 @@ export class Sala extends EventEmitter<EventosSala> {
     this.fim = null;
     this.historico = [];
     this.rodadasCompletas = 0;
+    this.pulosRestantes = PULOS_DE_LETRA_POR_PARTIDA;
   }
 
   private novaPartida(): void {
@@ -416,15 +456,24 @@ export class Sala extends EventEmitter<EventosSala> {
     this.iniciarRodada();
   }
 
+  private letrasDisponiveis(): string[] {
+    return ALFABETO.filter((l) => !this.config.letrasExcluidas.includes(l) && !this.letrasUsadas.includes(l));
+  }
+
   private iniciarRodada(): void {
-    const disponiveis = ALFABETO.filter(
-      (l) => !this.config.letrasExcluidas.includes(l) && !this.letrasUsadas.includes(l),
-    );
+    this.rodada++;
+    this.letraPulada = null;
+    this.sortearLetra();
+  }
+
+  /** Sorteia a letra e abre o sorteio. Também usado quando a sala pula a letra. */
+  private sortearLetra(): void {
+    const disponiveis = this.letrasDisponiveis();
     if (disponiveis.length === 0) {
       this.irParaFim();
       return;
     }
-    this.rodada++;
+    this.votosPular = new Set();
     this.letra = disponiveis[Math.floor(this.opcoes.aleatorio() * disponiveis.length)]!;
     this.letrasUsadas.push(this.letra);
     for (const j of this.jogadores.values()) {
@@ -495,6 +544,7 @@ export class Sala extends EventEmitter<EventosSala> {
     const posicaoAnterior = calcularPosicoes(totaisAntes);
 
     const pontosRodada: Record<string, number> = Object.fromEntries(presentes.map((j) => [j.id, 0]));
+    const folha: FolhaCategoria[] = [];
     this.config.categorias.forEach((categoria, i) => {
       const respostas = correcao.porCategoria[i]!.filter((r) => this.jogadores.has(r.jogadorId));
       const avaliadas = respostas.map((r) => ({
@@ -503,6 +553,17 @@ export class Sala extends EventEmitter<EventosSala> {
         anulada: r.motivo !== null || anuladaPorVotos(r.votos),
       }));
       const pontos = pontuarCategoria(avaliadas);
+      folha.push({
+        categoria,
+        respostas: respostas.map((r, k) => ({
+          jogadorId: r.jogadorId,
+          apelido: r.apelido,
+          avatar: r.avatar,
+          texto: r.texto,
+          pontos: pontos[r.jogadorId] ?? 0,
+          anulada: avaliadas[k]!.anulada,
+        })),
+      });
       for (const r of avaliadas) {
         pontosRodada[r.jogadorId]! += pontos[r.jogadorId] ?? 0;
         const original = respostas.find((o) => o.jogadorId === r.jogadorId)!;
@@ -532,7 +593,7 @@ export class Sala extends EventEmitter<EventosSala> {
       .sort((a, b) => a.posicao - b.posicao || a.apelido.localeCompare(b.apelido));
 
     this.correcao = null;
-    this.resultado = { linhas, prontos: new Set() };
+    this.resultado = { linhas, folha, prontos: new Set() };
     this.rodadasCompletas++;
     this.fase = 'resultado';
     this.definirPrazo(this.opcoes.duracoes.resultado, () => this.proximaEtapa());

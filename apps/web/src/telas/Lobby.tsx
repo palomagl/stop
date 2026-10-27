@@ -7,8 +7,10 @@ import {
   MAX_RODADAS,
   MIN_JOGADORES,
   MIN_RODADAS,
+  PACOTES,
   configSchema,
   normalizar,
+  pacoteDasCategorias,
   type Config,
   type EstadoSala,
   type JogadorPublico,
@@ -167,6 +169,14 @@ function ResumoConfig({ config }: { config: Config }) {
       </p>
       <div>
         <strong>Categorias ({config.categorias.length}):</strong>
+        {(() => {
+          const pacote = pacoteDasCategorias(config.categorias);
+          return pacote ? (
+            <span className="ml-1 font-bold text-tinta-suave">
+              pacote {pacote.emoji} {pacote.nome}
+            </span>
+          ) : null;
+        })()}
         <ul className="mt-2 flex flex-wrap gap-2">
           {config.categorias.map((c) => (
             <li key={c} className="rounded-full bg-cartao-2 px-3 py-1 font-bold">
@@ -189,6 +199,7 @@ function EditorConfig({ config }: { config: Config }) {
   const [novaCategoria, setNovaCategoria] = useState('');
   const [nomeLista, setNomeLista] = useState('');
   const listas = useListas();
+  const pacoteAtual = pacoteDasCategorias(config.categorias);
   const todasCategorias = [...CATEGORIAS_PADRAO, ...config.categorias.filter((c) => !CATEGORIAS_PADRAO.includes(c))];
 
   /** Confere localmente com o mesmo schema do servidor antes de mandar. */
@@ -252,6 +263,37 @@ function EditorConfig({ config }: { config: Config }) {
           onChange={(e) => salvar({ ...config, publica: e.target.checked })}
         />
       </label>
+
+      <div>
+        <h3 className="rotulo mb-2">Pacotes prontos</h3>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {PACOTES.map((pacote) => {
+            const ativo = pacoteAtual?.id === pacote.id;
+            return (
+              <button
+                key={pacote.id}
+                type="button"
+                aria-pressed={ativo}
+                onClick={() => usarLista(pacote.categorias)}
+                title={pacote.categorias.join(', ')}
+                className={`flex items-center gap-2 rounded-2xl border-2 px-2.5 py-2 text-left transition active:scale-95 ${
+                  ativo
+                    ? 'border-[#0b1638] bg-amarelo text-[#0b1638] shadow-[0_3px_0_#0b1638]'
+                    : 'border-tinta-suave/40 hover:bg-black/5'
+                }`}
+              >
+                <span className="text-2xl" aria-hidden="true">
+                  {pacote.emoji}
+                </span>
+                <span className="min-w-0 leading-tight">
+                  <span className="block font-extrabold">{pacote.nome}</span>
+                  <span className="block text-xs font-semibold opacity-75">{pacote.descricao}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {listas.length > 0 && (
         <div>

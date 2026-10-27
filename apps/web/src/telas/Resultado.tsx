@@ -101,6 +101,45 @@ export function Resultado({ sala }: { sala: EstadoSala }) {
           })}
         </ol>
       </LayoutGroup>
+
+      <section className="mt-8" aria-labelledby="titulo-folha">
+        <h2 id="titulo-folha" className="titulo mb-1 text-3xl">
+          Folha da rodada
+        </h2>
+        <p className="mb-3 text-sm font-semibold text-texto-suave">O que cada um escreveu e quanto valeu.</p>
+        <div className="flex flex-col gap-3">
+          {resultado.folha.map((f) => (
+            <div key={f.categoria} className="cartao p-3">
+              <h3 className="rotulo mb-2">{f.categoria}</h3>
+              <ul className="flex flex-col gap-1.5">
+                {f.respostas.map((r) => (
+                  <li
+                    key={r.jogadorId}
+                    className={`flex items-center gap-2.5 rounded-xl px-1 py-0.5 ${
+                      r.jogadorId === sala.meuId ? 'bg-amarelo/25' : ''
+                    }`}
+                  >
+                    <Avatar id={r.avatar} tamanho={32} />
+                    <span className="w-20 shrink-0 truncate text-sm font-bold text-tinta-suave">{r.apelido}</span>
+                    <span
+                      className={`min-w-0 flex-1 truncate text-lg font-extrabold ${
+                        r.anulada && r.texto ? 'text-tinta-suave line-through decoration-errado decoration-2' : ''
+                      }`}
+                    >
+                      {r.texto || <span className="text-sm font-semibold italic text-tinta-suave">(em branco)</span>}
+                    </span>
+                    <span className={`selo ${r.anulada ? 'text-errado' : 'text-certo'}`}>
+                      <span aria-hidden="true">{r.anulada ? '✗' : '✓'}</span>
+                      <span className="sr-only">{r.anulada ? 'anulada,' : 'valeu'}</span> {r.pontos}
+                      <span className="sr-only"> pontos</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </section>
     </Tela>
   );
 }

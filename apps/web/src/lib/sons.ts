@@ -91,6 +91,19 @@ export const sons = {
     [523, 659, 784, 1046].forEach((f, i) => nota(ctx, f, i * 0.12, 0.3, { volume: 0.14 }));
     nota(ctx, 1318, 0.5, 0.6, { volume: 0.12 });
   },
+  /** Rufar de tambor antes do pódio: batidinhas cada vez mais fortes. */
+  rufar() {
+    const ctx = audio();
+    if (!ctx) return;
+    for (let i = 0; i < 26; i++) ruido(ctx, i * 0.055, 0.05, 0.05 + (i / 26) * 0.25, 2600);
+  },
+  /** Alguém aparece no 2º ou 3º lugar. */
+  revelar() {
+    const ctx = audio();
+    if (!ctx) return;
+    nota(ctx, 523, 0, 0.12, { volume: 0.14 });
+    nota(ctx, 784, 0.1, 0.28, { volume: 0.14 });
+  },
   /** Confirmação discreta (pronto, voto). */
   pop() {
     const ctx = audio();

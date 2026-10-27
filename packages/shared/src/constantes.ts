@@ -42,6 +42,8 @@ export const CATEGORIAS_PADRAO = [
 export const DICAS_CATEGORIA: Record<string, string> = {
   CEP: 'cidade, estado ou país',
   MSÉ: 'minha sogra é…',
+  Gíria: 'palavra ou expressão',
+  'Comida típica': 'de qualquer lugar do Brasil',
 };
 
 export const CONFIG_PADRAO: Config = {
@@ -51,6 +53,9 @@ export const CONFIG_PADRAO: Config = {
   letrasExcluidas: ['K', 'W', 'Y', 'X', 'Q'],
   publica: false,
 };
+
+/** Quantas vezes a sala pode pular a letra numa partida. */
+export const PULOS_DE_LETRA_POR_PARTIDA = 1;
 
 export const TAMANHO_RANKING = 20;
 export const TAMANHO_HISTORICO = 30;
@@ -70,7 +75,8 @@ export const DURACOES = {
   correcao: 30_000,
   /** Categoria sem nenhuma resposta para votar passa mais rápido. */
   correcaoSemVotos: 4000,
-  resultado: 20_000,
+  /** Tem a folha da rodada para ler; quem terminar aperta "Pronto". */
+  resultado: 45_000,
   foraDaPartida: 120_000,
   salaSemNinguem: 30 * 60_000,
 };

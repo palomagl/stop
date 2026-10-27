@@ -79,6 +79,7 @@ export const esquemasCliente = {
   'rodada:stop': z.object({
     respostas: z.record(z.string().max(MAX_CATEGORIA), z.string().max(MAX_RESPOSTA)),
   }),
+  'rodada:pularLetra': z.undefined().optional(),
   'voto:enviar': z.object({
     indice: z.number().int().min(0),
     jogadorId: idSchema,
