@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/partida.gif" width="640" alt="Duas pessoas jogando ao mesmo tempo, cada uma no seu celular: entram na sala pelo código, a letra é sorteada, as duas escrevem, uma aperta STOP e a outra vê a contagem 3, 2, 1. Depois vêm a correção com votos, o placar e o pódio." />
+  <img src="docs/stopou-partida.gif" width="640" alt="Duas pessoas jogando ao mesmo tempo, cada uma no seu celular: entram na sala pelo código, a letra é sorteada, as duas escrevem, uma aperta STOP e a outra vê a contagem 3, 2, 1. Depois vêm a correção com votos, o placar e o pódio." />
 </p>
 
 ## Como jogar
@@ -23,7 +23,7 @@
 6. **Resposta única vale 10, repetida vale 5.** Quem somar mais sobe no pódio. 🏆
 
 <p align="center">
-  <img src="docs/telas.png" width="760" alt="Telas do Stopou!: início, escolha do bicho, respostas, aviso de STOP, correção com votos, placar, pódio e ranking." />
+  <img src="docs/stopou-telas.png" width="760" alt="Telas do Stopou!: início, escolha do bicho, respostas, aviso de STOP, correção com votos, placar, pódio e ranking." />
 </p>
 
 ## Por que é legal
