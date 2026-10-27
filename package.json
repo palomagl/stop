@@ -15,7 +15,7 @@
     "dev": "concurrently -k -n server,web -c blue,magenta \"npm run dev -w @rabisco/server\" \"npm run dev -w @rabisco/web\"",
     "build": "npm run build -w @rabisco/server && npm run build -w @rabisco/web",
     "lint": "eslint .",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present && tsc -p e2e",
     "test": "npm run test --workspaces --if-present",
     "test:e2e": "playwright test"
   },
