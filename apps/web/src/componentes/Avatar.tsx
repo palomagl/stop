@@ -66,9 +66,11 @@ const EXTRAS = [
 ];
 
 // Os IDs antigos permanecem: tradicionais 0–23, extras 24–53, divertidos 54–83.
+// Os Divertidos vêm com o cartão roxo desenhado; o recorte sem fundo é o que aparece no pódio.
 const DIVERTIDOS = EXTRAS.map((avatar, indice) => ({
   nome: avatar.nome,
   arquivo: `divertidos/${String(indice + 55).padStart(2, '0')}.webp`,
+  recorte: `divertidos/recorte/${String(indice + 55).padStart(2, '0')}.webp`,
 }));
 
 export const COLECOES: { id: ColecaoAvatar; nome: string; descricao: string }[] = [
@@ -83,12 +85,30 @@ export const AVATARES = [
   ...DIVERTIDOS.map((avatar) => ({ ...avatar, colecao: 'divertidos' as const })),
 ];
 
+function avatarPorId(id: number) {
+  return AVATARES[id] ?? AVATARES[0]!;
+}
+
+export function urlDoAvatar(id: number): string {
+  return `/bichos/${avatarPorId(id).arquivo}`;
+}
+
+/** O bicho sem fundo nenhum, para quem desenha em volta dele (como o pódio). */
+export function recorteDoAvatar(id: number): string {
+  const avatar = avatarPorId(id);
+  return `/bichos/${'recorte' in avatar ? avatar.recorte : avatar.arquivo}`;
+}
+
+export function nomeDoAvatar(id: number): string {
+  return avatarPorId(id).nome;
+}
+
 /** O bicho num quadradinho de cantos redondos, com fundo escuro para as cores saltarem. */
 export function Avatar({ id, tamanho = 40, className = '' }: { id: number; tamanho?: number; className?: string }) {
-  const avatar = AVATARES[id] ?? AVATARES[0]!;
+  const avatar = avatarPorId(id);
   return (
     <img
-      src={`/bichos/${avatar.arquivo}`}
+      src={urlDoAvatar(id)}
       alt={avatar.nome}
       width={tamanho}
       height={tamanho}

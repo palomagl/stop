@@ -39,7 +39,7 @@ Os WebP atuais têm 256 × 256 px, com margem transparente, traço cartoon 2D, f
 
 - **Tradicionais:** os 24 animais existentes; IDs 0–23 preservados, arquivos na raiz de `bichos/`.
 - **Extras:** 30 desenhos anteriores, separados em `bichos/engracados/`; IDs 24–53.
-- **Divertidos:** 30 rostos de traço simples com olhos, sobrancelhas e bocas expressivas, inspirados na referência visual; arquivos `bichos/divertidos/55.webp` a `84.webp`, IDs 54–83. São uma aproximação ilustrada, não recortes dos pixels da foto original.
+- **Divertidos:** 30 rostos de traço simples com olhos, sobrancelhas e bocas expressivas, inspirados na referência visual; arquivos `bichos/divertidos/55.webp` a `84.webp`, IDs 54–83. São uma aproximação ilustrada, não recortes dos pixels da foto original. Como já vêm com o cartão roxo desenhado, cada um tem uma cópia sem fundo em `bichos/divertidos/recorte/`, usada no pódio. Ao trocar um Divertido, gere o recorte de novo com `python3 scripts/recortar-divertidos.py apps/web/public/bichos/divertidos apps/web/public/bichos/divertidos/recorte` (precisa de Pillow e NumPy).
 
 Para perfis novos, o formulário abre em Divertidos. Perfis salvos mantêm seu personagem e abrem a coleção correspondente. Trocar a coleção não troca o personagem: é necessário selecionar um rosto. Setas, Home e End navegam somente pela coleção visível.
 

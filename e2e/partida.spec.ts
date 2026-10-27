@@ -87,10 +87,10 @@ test('duas pessoas criam e entram na sala, jogam uma rodada e veem o placar', as
   // Pódio com suspense: a Ana pula a animação, a Bia assiste até o fim.
   await expect(ana.getByRole('heading', { name: /E o pódio vai para/ })).toBeVisible();
   await ana.getByRole('button', { name: /Pular/ }).click();
-  await expect(ana.getByRole('heading', { name: 'Fim de jogo!' })).toBeVisible();
+  await expect(ana.getByRole('heading', { name: 'Pódio!' })).toBeVisible();
   await expect(ana.getByText('Você ganhou! 🏆')).toBeVisible();
-  await expect(bia.getByRole('heading', { name: 'Fim de jogo!' })).toBeVisible({ timeout: 10_000 });
-  await expect(bia.getByText('Você ficou em 2º lugar')).toBeVisible();
+  await expect(bia.getByRole('heading', { name: 'Pódio!' })).toBeVisible({ timeout: 10_000 });
+  await expect(bia.getByText('Você está no pódio, em 2º lugar! 🎉')).toBeVisible();
   await expect(ana.getByRole('button', { name: 'Jogar de novo' })).toBeVisible();
   await expect(bia.getByText(/Esperando Ana decidir/)).toBeVisible();
 });
