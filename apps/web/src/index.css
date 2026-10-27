@@ -1,0 +1,224 @@
+@import 'tailwindcss';
+@import '@fontsource/caveat/500.css';
+@import '@fontsource/caveat/700.css';
+@import '@fontsource-variable/nunito';
+
+@custom-variant dark (&:where([data-tema='escuro'], [data-tema='escuro'] *));
+
+/* ── Cores: folha de caderno (claro) e quadro-negro (escuro) ─────────────
+   Certo é azul de caneta e errado é vermelho-alaranjado: o par continua
+   distinguível para quem não diferencia vermelho de verde. */
+:root {
+  --papel: #fdfbf3;
+  --papel-2: #f4efdd;
+  --pauta: #c4d9ef;
+  --margem: #f0a3a3;
+  --tinta: #1f2a44;
+  --tinta-suave: #5d6780;
+  --caneta: #2357c9;
+  --certo: #2357c9;
+  --errado: #d2452c;
+  --marca-texto: #ffd84d;
+  --adesivo: #ffffff;
+  --sombra: #1f2a44;
+  --stop: #e2492f;
+  --stop-texto: #ffffff;
+  color-scheme: light;
+}
+
+[data-tema='escuro'] {
+  --papel: #24332c;
+  --papel-2: #2d3e35;
+  --pauta: rgb(255 255 255 / 0.07);
+  --margem: rgb(255 150 150 / 0.22);
+  --tinta: #f3f0e4;
+  --tinta-suave: #b9c4bb;
+  --caneta: #9cc5ff;
+  --certo: #9cc5ff;
+  --errado: #ff9a7f;
+  --marca-texto: #ffe27a;
+  --adesivo: #31453b;
+  --sombra: #101915;
+  --stop: #ff7a5f;
+  --stop-texto: #1b120f;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-papel: var(--papel);
+  --color-papel-2: var(--papel-2);
+  --color-tinta: var(--tinta);
+  --color-tinta-suave: var(--tinta-suave);
+  --color-caneta: var(--caneta);
+  --color-certo: var(--certo);
+  --color-errado: var(--errado);
+  --color-marca-texto: var(--marca-texto);
+  --color-adesivo: var(--adesivo);
+  --color-stop: var(--stop);
+  --color-stop-texto: var(--stop-texto);
+  --font-mao: 'Caveat', 'Comic Sans MS', cursive;
+  --font-sans: 'Nunito Variable', ui-rounded, system-ui, sans-serif;
+}
+
+/* ── Página ──────────────────────────────────────────────────────────── */
+html {
+  -webkit-text-size-adjust: 100%;
+  background-color: var(--papel);
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: var(--font-sans);
+  color: var(--tinta);
+  background-color: var(--papel);
+  /* Margem vermelha + linhas da pauta */
+  background-image:
+    linear-gradient(90deg, transparent 22px, var(--margem) 22px, var(--margem) 24px, transparent 24px),
+    repeating-linear-gradient(to bottom, transparent 0, transparent 35px, var(--pauta) 35px, var(--pauta) 36px);
+  background-attachment: local;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (min-width: 640px) {
+  body {
+    background-image:
+      linear-gradient(90deg, transparent 56px, var(--margem) 56px, var(--margem) 58px, transparent 58px),
+      repeating-linear-gradient(to bottom, transparent 0, transparent 35px, var(--pauta) 35px, var(--pauta) 36px);
+  }
+}
+
+[data-tema='escuro'] body {
+  /* Giz apagado no quadro */
+  background-image:
+    radial-gradient(ellipse at 20% 10%, rgb(255 255 255 / 0.05), transparent 45%),
+    radial-gradient(ellipse at 80% 70%, rgb(255 255 255 / 0.04), transparent 50%),
+    linear-gradient(90deg, transparent 22px, var(--margem) 22px, var(--margem) 24px, transparent 24px),
+    repeating-linear-gradient(to bottom, transparent 0, transparent 35px, var(--pauta) 35px, var(--pauta) 36px);
+}
+
+:focus-visible {
+  outline: 3px dashed var(--caneta);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: var(--marca-texto);
+  color: #1f2a44;
+}
+
+@layer components {
+  /* Botão que parece adesivo colado na folha */
+  .adesivo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+    padding: 0.6rem 1.25rem;
+    border: 2.5px solid var(--tinta);
+    border-radius: 14px;
+    background: var(--adesivo);
+    color: var(--tinta);
+    font-weight: 800;
+    font-size: 1.05rem;
+    box-shadow: 3px 3px 0 var(--sombra);
+    transition:
+      transform 0.08s ease,
+      box-shadow 0.08s ease;
+    touch-action: manipulation;
+    user-select: none;
+  }
+  .adesivo:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 var(--sombra);
+  }
+  .adesivo:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  .adesivo-amarelo {
+    background: var(--marca-texto);
+    color: #1f2a44;
+  }
+  .adesivo-stop {
+    background: var(--stop);
+    color: var(--stop-texto);
+  }
+  .adesivo-azul {
+    background: var(--caneta);
+    color: var(--papel);
+  }
+
+  /* Pedaço de papel destacado (cartões) */
+  .cartao {
+    background: var(--papel);
+    border: 2px solid var(--tinta);
+    border-radius: 16px;
+    box-shadow: 4px 4px 0 var(--sombra);
+  }
+
+  /* Campo escrito à mão sobre a linha */
+  .linha-escrita {
+    width: 100%;
+    border: 0;
+    border-bottom: 2.5px solid var(--tinta-suave);
+    background: transparent;
+    font-family: var(--font-mao);
+    font-size: 1.9rem;
+    line-height: 1.2;
+    color: var(--caneta);
+    padding: 0.1rem 0.25rem;
+    border-radius: 0;
+  }
+  .linha-escrita:focus {
+    outline: none;
+    border-bottom-color: var(--caneta);
+    background: color-mix(in srgb, var(--marca-texto) 22%, transparent);
+  }
+  .linha-escrita::placeholder {
+    color: var(--tinta-suave);
+    opacity: 0.45;
+  }
+
+  .rotulo {
+    font-weight: 800;
+    font-size: 0.95rem;
+  }
+}
+
+@keyframes pulsar {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+.pulsando {
+  animation: pulsar 1s ease-in-out infinite;
+}
+
+.sr-only-focavel:not(:focus) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+/* Quem desativou animações no sistema não vê nada se mexendo. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
