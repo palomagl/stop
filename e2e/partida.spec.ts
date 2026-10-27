@@ -160,3 +160,26 @@ test('em sala pública, quem é denunciado pela maioria sai da sala', async ({ b
   await expect(chato.getByRole('button', { name: /Jogar agora/ })).toBeVisible();
   await expect(ana.getByText('Chato', { exact: true })).toHaveCount(0);
 });
+
+test('seleção pelo teclado e sala sem cortes em tela estreita', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Criar sala', exact: true }).click();
+  await page.getByRole('radio', { checked: true }).press('End');
+  await expect(page.getByRole('radio', { name: 'Dragão', exact: true })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByRole('radio', { name: 'Dragão', exact: true })).toBeFocused();
+  await page.getByRole('radio', { name: 'Dragão', exact: true }).press('Home');
+  await expect(page.getByRole('radio', { name: 'Caramelo', exact: true })).toHaveAttribute('aria-checked', 'true');
+  await page.getByRole('radio', { name: 'Caramelo', exact: true }).press('ArrowRight');
+  await expect(page.getByRole('radio', { name: 'Gato', exact: true })).toHaveAttribute('aria-checked', 'true');
+  await page.getByRole('button', { name: 'Usar tema noite' }).click();
+  await expect(page.getByRole('button', { name: 'Usar tema dia' })).toBeVisible();
+  await page.getByLabel('Seu apelido').fill('Paloma');
+  await page.getByRole('button', { name: 'Criar sala', exact: true }).click();
+  await expect(page.getByText('Código da sala', { exact: true })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Gato', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Silenciar sons' })).toBeInViewport();
+  await page.getByRole('switch').click();
+  await expect(page.getByRole('switch')).toBeChecked();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});

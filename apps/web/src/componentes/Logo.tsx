@@ -31,9 +31,9 @@ export function Logo({ grande = false }: { grande?: boolean }) {
 
   return (
     <span className="relative inline-flex flex-col items-center" aria-label={`${NOME_DO_JOGO} Adedonha online`}>
-      <Tic tamanho={150} className="-mb-6" />
+      <Tic tamanho={122} className="-mb-5 sm:size-[150px] sm:-mb-6" />
       <span aria-hidden="true" className="relative">
-        <Palavra tamanho="text-[4.6rem] sm:text-[5.5rem]" />
+        <Palavra tamanho="text-[4rem] sm:text-[5.5rem]" />
       </span>
       <span
         aria-hidden="true"

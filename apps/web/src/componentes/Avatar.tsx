@@ -40,7 +40,7 @@ export function Avatar({ id, tamanho = 40, className = '' }: { id: number; taman
       width={tamanho}
       height={tamanho}
       draggable={false}
-      className={`inline-block shrink-0 rounded-[22%] bg-[#1d2a63] ${className}`}
+      className={`avatar inline-block shrink-0 rounded-[22%] ${className}`}
     />
   );
 }

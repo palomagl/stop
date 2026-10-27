@@ -13,8 +13,8 @@ export function EstadoArquivo<T>({ estado, children }: { estado: EstadoBusca<T>;
   }
   if (estado.tipo === 'desligado') {
     return (
-      <div className="cartao flex items-center gap-3 p-4">
-        <Tic tamanho={56} humor="dormindo" />
+      <div className="cartao estado-vazio flex flex-col items-center gap-4 px-6 py-8 text-center">
+        <Tic tamanho={56} humor="dormindo" className="opacity-90" />
         <p className="font-semibold">
           Este servidor não está guardando partidas. Quando ele tiver um banco de dados ligado, o ranking e o histórico
           aparecem aqui.
