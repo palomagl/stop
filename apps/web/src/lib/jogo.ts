@@ -185,8 +185,9 @@ const MOTIVO_SAIDA = {
   denuncias: 'Seu apelido foi denunciado pela sala e você saiu dela.',
 } as const;
 
-socket.on('jogador:removido', ({ motivo }) => {
-  avisar(MOTIVO_SAIDA[motivo]);
+socket.on('jogador:removido', (dados) => {
+  // Servidor de versão anterior manda o aviso sem o motivo.
+  avisar(MOTIVO_SAIDA[dados?.motivo ?? 'removido']);
   esquecerSala();
 });
 
