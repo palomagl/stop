@@ -4,6 +4,7 @@ async function criarSala(pagina: Page, apelido: string) {
   await pagina.goto('/');
   await pagina.getByRole('button', { name: 'Criar sala' }).click();
   await pagina.getByLabel('Seu apelido').fill(apelido);
+  await pagina.getByRole('button', { name: 'Tradicionais', exact: true }).click();
   await pagina.getByRole('radio', { name: 'Gato' }).click();
   await pagina.getByRole('button', { name: 'Criar sala' }).click();
   await expect(pagina.getByText('Código da sala', { exact: true })).toBeVisible();
@@ -15,6 +16,7 @@ async function entrarPorCodigo(pagina: Page, codigo: string, apelido: string) {
   await pagina.getByRole('button', { name: 'Entrar com código' }).click();
   await pagina.getByLabel('Código da sala').fill(codigo);
   await pagina.getByLabel('Seu apelido').fill(apelido);
+  await pagina.getByRole('button', { name: 'Tradicionais', exact: true }).click();
   await pagina.getByRole('radio', { name: 'Panda' }).click();
   await pagina.getByRole('button', { name: 'Entrar', exact: true }).click();
 }
@@ -167,6 +169,52 @@ test('em sala pública, quem é denunciado pela maioria sai da sala', async ({ b
   await expect(chato.getByText('Seu apelido foi denunciado pela sala e você saiu dela.')).toBeVisible();
   await expect(chato.getByRole('button', { name: /Jogar agora/ })).toBeVisible();
   await expect(ana.getByText('Chato', { exact: true })).toHaveCount(0);
+});
+
+test('seleção pelo teclado e sala sem cortes em tela estreita', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Criar sala', exact: true }).click();
+  await page.getByRole('button', { name: 'Tradicionais', exact: true }).click();
+  await page.getByRole('radio', { name: 'Caramelo', exact: true }).press('End');
+  await expect(page.getByRole('radio', { name: 'Dragão', exact: true })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByRole('radio', { name: 'Dragão', exact: true })).toBeFocused();
+  await page.getByRole('radio', { name: 'Dragão', exact: true }).press('Home');
+  await expect(page.getByRole('radio', { name: 'Caramelo', exact: true })).toHaveAttribute('aria-checked', 'true');
+  await page.getByRole('radio', { name: 'Caramelo', exact: true }).press('ArrowRight');
+  await expect(page.getByRole('radio', { name: 'Gato', exact: true })).toHaveAttribute('aria-checked', 'true');
+  await page.getByRole('button', { name: 'Usar tema noite' }).click();
+  await expect(page.getByRole('button', { name: 'Usar tema dia' })).toBeVisible();
+  await page.getByLabel('Seu apelido').fill('Paloma');
+  await page.getByRole('button', { name: 'Criar sala', exact: true }).click();
+  await expect(page.getByText('Código da sala', { exact: true })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Gato', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Silenciar sons' })).toBeInViewport();
+  await page.getByRole('switch').click();
+  await expect(page.getByRole('switch')).toBeChecked();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+
+test('três coleções mantêm IDs e a escolha após reconectar', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Criar sala', exact: true }).click();
+  for (const [colecao, quantidade] of [['Divertidos', 30], ['Tradicionais', 24], ['Extras', 30]] as const) {
+    await page.getByRole('button', { name: colecao, exact: true }).click();
+    await expect(page.getByRole('radio')).toHaveCount(quantidade);
+    await page.getByRole('radiogroup').locator('img').evaluateAll((imgs) => Promise.all(imgs.map((img) => (img as HTMLImageElement).decode())));
+  }
+  await page.getByRole('button', { name: 'Divertidos', exact: true }).click();
+  await page.getByRole('radio', { name: 'Planeta', exact: true }).click();
+  await page.getByRole('button', { name: 'Tradicionais', exact: true }).click();
+  await page.getByRole('button', { name: 'Divertidos', exact: true }).click();
+  await expect(page.getByRole('radio', { name: 'Planeta', exact: true })).toHaveAttribute('aria-checked', 'true');
+  await page.getByLabel('Seu apelido').fill('Astral');
+  await page.getByRole('button', { name: 'Criar sala', exact: true }).click();
+  await expect(page.getByText('Código da sala', { exact: true })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Planeta', exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('img', { name: 'Planeta', exact: true })).toBeVisible();
 });
 
 test('pacote pronto de categorias e votação para pular a letra', async ({ browser }) => {

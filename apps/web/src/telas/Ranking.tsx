@@ -16,7 +16,7 @@ export function Ranking({ aoVoltar }: { aoVoltar: () => void }) {
       <EstadoArquivo estado={estado}>
         {(linhas) =>
           linhas.length === 0 ? (
-            <p className="titulo text-2xl">Ninguém terminou uma partida ainda. Que tal ser a primeira pessoa?</p>
+            <div className="cartao px-6 py-10 text-center"><span className="mb-3 block text-4xl" aria-hidden="true">🏆</span><p className="font-titulo text-2xl text-tinta">Ninguém terminou uma partida ainda. Que tal ser a primeira pessoa?</p></div>
           ) : (
             <ol className="flex flex-col gap-2">
               {linhas.map((l) => (

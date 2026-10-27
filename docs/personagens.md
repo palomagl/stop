@@ -1,6 +1,6 @@
 # Personagens (bichos)
 
-Os 24 personagens que a pessoa escolhe ao entrar na sala. Eles aparecem na lista de jogadores, no progresso da rodada, ao lado de cada resposta na correção, no placar e no pódio.
+Os 84 personagens que a pessoa escolhe ao entrar na sala, separados em três coleções: **Divertidos**, **Tradicionais** e **Extras**. Eles aparecem na lista de jogadores, no progresso da rodada, ao lado de cada resposta na correção, no placar e no pódio.
 
 ## Onde ficam
 
@@ -34,6 +34,16 @@ Os 24 personagens que a pessoa escolhe ao entrar na sala. Eles aparecem na lista
 | 24 | `24-dragao.webp` | Dragão |
 
 Os WebP atuais têm 256 × 256 px, com margem transparente, traço cartoon 2D, formas arredondadas, olhos expressivos e sombras simples, sem textura realista de pelos. Os SVG anteriores continuam na pasta como referência; o jogo usa os WebP. A ordem e os identificadores dos personagens foram preservados.
+
+## Coleções e identificadores
+
+- **Tradicionais:** os 24 animais existentes; IDs 0–23 preservados, arquivos na raiz de `bichos/`.
+- **Extras:** 30 desenhos anteriores, separados em `bichos/engracados/`; IDs 24–53.
+- **Divertidos:** 30 rostos de traço simples com olhos, sobrancelhas e bocas expressivas, inspirados na referência visual; arquivos `bichos/divertidos/55.webp` a `84.webp`, IDs 54–83. São uma aproximação ilustrada, não recortes dos pixels da foto original.
+
+Para perfis novos, o formulário abre em Divertidos. Perfis salvos mantêm seu personagem e abrem a coleção correspondente. Trocar a coleção não troca o personagem: é necessário selecionar um rosto. Setas, Home e End navegam somente pela coleção visível.
+
+O servidor e o frontend devem ser publicados juntos: o schema compartilhado passa a aceitar 84 avatares. Os IDs guardados em partidas anteriores não mudam. Os arquivos WebP entram no cache da PWA.
 
 ## Regras para um desenho novo
 

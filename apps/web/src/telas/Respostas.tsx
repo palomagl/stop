@@ -113,7 +113,7 @@ export function Respostas({ sala }: { sala: EstadoSala }) {
 
   return (
     <>
-      <div className="sticky top-14 z-20 border-b-2 border-white/10 bg-[var(--vidro)] backdrop-blur-md">
+      <div className="barra-rodada sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-20 border-b border-white/10 bg-[var(--vidro)] backdrop-blur-md">
         <div className="mx-auto flex max-w-xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
           <span
             className="grid size-16 shrink-0 place-items-center rounded-full border-[3px] border-[#0b1638] bg-amarelo font-titulo text-5xl leading-none text-[#0b1638] shadow-[0_4px_0_#0b1638]"
@@ -144,6 +144,15 @@ export function Respostas({ sala }: { sala: EstadoSala }) {
               Rodada {sala.rodada} de {sala.config.rodadas}
             </span>
             {!travando && <Cronometro terminaEm={sala.terminaEm} grande />}
+          </div>
+        </div>
+        <div className="mx-auto max-w-xl px-4 pb-3 sm:px-6">
+          <div className="mb-1 flex justify-between text-xs font-bold text-texto-suave">
+            <span>{travando ? 'Últimos segundos!' : 'Suas respostas'}</span>
+            <span>{categorias.length - faltando} de {categorias.length}</span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-white/15" aria-hidden="true">
+            <div className="h-full rounded-full bg-amarelo transition-[width] duration-200" style={{ width: `${((categorias.length - faltando) / categorias.length) * 100}%` }} />
           </div>
         </div>
         <AnimatePresence>{travando && <AvisoStop sala={sala} restante={restante} />}</AnimatePresence>

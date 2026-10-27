@@ -1,16 +1,17 @@
 import { alternarSom, alternarTema, usePreferencias } from '../lib/preferencias';
 import { useJogo } from '../lib/jogo';
 import { Logo } from './Logo';
+import { Icone } from './Icone';
 import { BotaoReacoes } from './Reacoes';
 
-const BOTAO_ICONE = 'grid size-11 place-items-center rounded-full text-xl transition hover:bg-white/10 active:scale-90';
+const BOTAO_ICONE = 'botao-icone grid size-11 place-items-center rounded-full text-xl transition active:scale-90';
 
 export function Cabecalho() {
   const { tema, mudo } = usePreferencias();
   const { sala, conexao } = useJogo();
 
   return (
-    <header className="sticky top-0 z-30 border-b-2 border-white/10 bg-[var(--vidro)] backdrop-blur-md">
+    <header data-em-sala={Boolean(sala)} className="cabecalho sticky top-0 z-30">
       <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-2 pl-3 pr-1 sm:px-6">
         <Logo />
         <div className="flex items-center">
@@ -29,7 +30,7 @@ export function Cabecalho() {
             aria-label={mudo ? 'Ligar sons' : 'Silenciar sons'}
             title={mudo ? 'Ligar sons' : 'Silenciar sons'}
           >
-            <span aria-hidden="true">{mudo ? '🔇' : '🔊'}</span>
+            <Icone nome={mudo ? 'mudo' : 'som'} />
           </button>
           <button
             type="button"
@@ -38,7 +39,7 @@ export function Cabecalho() {
             aria-label={tema === 'claro' ? 'Usar tema noite' : 'Usar tema dia'}
             title={tema === 'claro' ? 'Tema noite' : 'Tema dia'}
           >
-            <span aria-hidden="true">{tema === 'claro' ? '🌙' : '☀️'}</span>
+            <Icone nome={tema === 'claro' ? 'lua' : 'sol'} />
           </button>
         </div>
       </div>

@@ -123,14 +123,15 @@ function Convite({ codigo }: { codigo: string }) {
   }
 
   return (
-    <section className="cartao relative p-5 text-center" aria-labelledby="titulo-codigo">
+    <section className="cartao convite relative p-5 text-center" aria-labelledby="titulo-codigo">
       <h2 id="titulo-codigo" className="rotulo">
         Código da sala
       </h2>
       <p className="my-1 font-titulo text-6xl tracking-[0.2em] text-tinta sm:text-7xl" aria-label={codigo.split('').join(' ')}>
         {codigo}
       </p>
-      <div className="mt-3 flex flex-wrap justify-center gap-2">
+      <p className="text-sm font-semibold text-tinta-suave">Uma sala, uma turma, muitas ideias.</p>
+      <div className="mt-4 flex flex-wrap justify-center gap-2">
         <button type="button" className="botao botao-pequeno" onClick={copiar}>
           Copiar link
         </button>
@@ -248,7 +249,7 @@ function EditorConfig({ config }: { config: Config }) {
   }
 
   return (
-    <div className="cartao space-y-6 p-4">
+    <div className="cartao config-editor space-y-6 p-4 sm:p-5">
       <label className="flex items-center justify-between gap-4">
         <span>
           <span className="rotulo block">Sala pública</span>
@@ -257,7 +258,7 @@ function EditorConfig({ config }: { config: Config }) {
         <input
           type="checkbox"
           role="switch"
-          className="size-7 shrink-0 accent-[var(--coral)]"
+          className="shrink-0"
           checked={config.publica}
           onChange={(e) => salvar({ ...config, publica: e.target.checked })}
         />
@@ -349,7 +350,7 @@ function EditorConfig({ config }: { config: Config }) {
           })}
         </div>
         <form onSubmit={adicionarCategoria} className="mt-3 flex items-end gap-2">
-          <label className="flex flex-1 flex-col">
+          <label className="flex min-w-0 flex-1 flex-col">
             <span className="text-sm font-bold">Nova categoria</span>
             <input
               className="campo text-xl"
@@ -364,7 +365,7 @@ function EditorConfig({ config }: { config: Config }) {
           </button>
         </form>
         <form onSubmit={guardarLista} className="mt-3 flex items-end gap-2">
-          <label className="flex flex-1 flex-col">
+          <label className="flex min-w-0 flex-1 flex-col">
             <span className="text-sm font-bold">Salvar estas categorias como lista</span>
             <input
               className="campo text-xl"

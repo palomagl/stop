@@ -15,7 +15,7 @@ export function ListaJogadores({ jogadores, meuId, rotuloPronto = 'pronto', aoRe
   return (
     <ul className="grid gap-2.5 sm:grid-cols-2" aria-label="Jogadores na sala">
       {jogadores.map((j) => (
-        <li key={j.id} className="cartao flex items-center gap-3 px-2.5 py-2">
+        <li key={j.id} data-eu={j.id === meuId} className="cartao jogador-card flex items-center gap-3 px-3 py-3">
           <span className="relative">
             <Avatar id={j.avatar} tamanho={48} className={j.online ? '' : 'opacity-40 grayscale'} />
             <span
