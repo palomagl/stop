@@ -1,4 +1,9 @@
-node_modules/
-dist/
-prisma/*.db
-prisma/*.db-journal
+node_modules
+dist
+coverage
+.env
+.env.local
+test-results
+playwright-report
+*.log
+.DS_Store
