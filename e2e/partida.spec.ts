@@ -78,9 +78,17 @@ test('duas pessoas criam e entram na sala, jogam uma rodada e veem o placar', as
   await expect(ana.getByRole('heading', { name: 'Placar da rodada' })).toBeVisible();
   await expect(ana.getByLabel('15 pontos nesta rodada', { exact: true })).toBeVisible();
   await expect(bia.getByLabel('5 pontos nesta rodada', { exact: true })).toBeVisible();
+  await expect(ana.getByRole('heading', { name: 'Folha da rodada' })).toBeVisible();
+  await expect(ana.getByText(`${letra}rara`)).toBeVisible();
 
   for (const pagina of [ana, bia]) await pagina.getByRole('button', { name: 'Ver o pódio!' }).click();
-  await expect(bia.getByRole('heading', { name: 'Fim de jogo!' })).toBeVisible();
+  // Pódio com suspense: a Ana pula a animação, a Bia assiste até o fim.
+  await expect(ana.getByRole('heading', { name: /E o pódio vai para/ })).toBeVisible();
+  await ana.getByRole('button', { name: /Pular/ }).click();
+  await expect(ana.getByRole('heading', { name: 'Fim de jogo!' })).toBeVisible();
+  await expect(ana.getByText('Você ganhou! 🏆')).toBeVisible();
+  await expect(bia.getByRole('heading', { name: 'Fim de jogo!' })).toBeVisible({ timeout: 10_000 });
+  await expect(bia.getByText('Você ficou em 2º lugar')).toBeVisible();
   await expect(ana.getByRole('button', { name: 'Jogar de novo' })).toBeVisible();
   await expect(bia.getByText(/Esperando Ana decidir/)).toBeVisible();
 });
@@ -159,4 +167,31 @@ test('em sala pública, quem é denunciado pela maioria sai da sala', async ({ b
   await expect(chato.getByText('Seu apelido foi denunciado pela sala e você saiu dela.')).toBeVisible();
   await expect(chato.getByRole('button', { name: /Jogar agora/ })).toBeVisible();
   await expect(ana.getByText('Chato', { exact: true })).toHaveCount(0);
+});
+
+test('pacote pronto de categorias e votação para pular a letra', async ({ browser }) => {
+  const ana = await (await browser.newContext()).newPage();
+  const bia = await (await browser.newContext()).newPage();
+  const codigo = await criarSala(ana, 'Ana');
+  await entrarPorCodigo(bia, codigo, 'Bia');
+
+  await ana.getByRole('button', { name: /Rapidinho/ }).click();
+  await expect(ana.getByRole('button', { name: /Rapidinho/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(bia.getByText(/pacote ⚡ Rapidinho/)).toBeVisible();
+
+  await bia.getByRole('button', { name: 'Estou pronto!' }).click();
+  await ana.getByRole('button', { name: 'Começar partida' }).click();
+  await expect(campos(ana)).toHaveCount(5, { timeout: 10_000 });
+  const primeira = (await ana.getByLabel(/^Letra [A-Z]$/).getAttribute('aria-label'))!.slice(-1);
+
+  await ana.getByRole('button', { name: /Votar para pular a letra/ }).click();
+  await expect(ana.getByRole('button', { name: /Você votou para pular a letra/ })).toBeDisabled();
+  await bia.getByRole('button', { name: /Votar para pular a letra/ }).click();
+  await expect(bia.getByText(`A letra ${primeira} foi pulada. Sorteando outra!`)).toBeVisible();
+
+  await expect(campos(bia)).toHaveCount(5, { timeout: 10_000 });
+  const nova = (await bia.getByLabel(/^Letra [A-Z]$/).getAttribute('aria-label'))!.slice(-1);
+  expect(nova).not.toBe(primeira);
+  // Só um pulo por partida
+  await expect(bia.getByRole('button', { name: /pular a letra/ })).toHaveCount(0);
 });
