@@ -1,9 +1,9 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { useMemo } from 'react';
 
-const CORES = ['#e2492f', '#ffd23f', '#2357c9', '#5cc27a', '#b28dff', '#ff9fb7'];
+const CORES = ['#ff4d3d', '#ffd23f', '#ffffff', '#33d69f', '#7fb2ff', '#ff9fb7'];
 
-/** Pedacinhos de papel picado caindo. Não aparece para quem desativou animações. */
+/** Confete caindo. Não aparece para quem desativou animações. */
 export function Confete({ quantidade = 70 }: { quantidade?: number }) {
   const reduzir = useReducedMotion();
   const pedacos = useMemo(

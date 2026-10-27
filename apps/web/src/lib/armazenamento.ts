@@ -4,7 +4,7 @@
  */
 export function ler<T>(chave: string): T | null {
   try {
-    const bruto = localStorage.getItem(`rabisco:${chave}`);
+    const bruto = localStorage.getItem(`stopou:${chave}`);
     return bruto === null ? null : (JSON.parse(bruto) as T);
   } catch {
     return null;
@@ -13,7 +13,7 @@ export function ler<T>(chave: string): T | null {
 
 export function gravar(chave: string, valor: unknown): void {
   try {
-    localStorage.setItem(`rabisco:${chave}`, JSON.stringify(valor));
+    localStorage.setItem(`stopou:${chave}`, JSON.stringify(valor));
   } catch {
     // sem armazenamento: segue sem lembrar
   }
@@ -21,7 +21,7 @@ export function gravar(chave: string, valor: unknown): void {
 
 export function apagar(chave: string): void {
   try {
-    localStorage.removeItem(`rabisco:${chave}`);
+    localStorage.removeItem(`stopou:${chave}`);
   } catch {
     // idem
   }

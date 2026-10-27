@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <path d="M12 100C14 86 28 79 50 79S86 86 88 100Z" fill="#e2a232"/>
+    <path d="M12 100C14 86 28 79 50 79S86 86 88 100Z" fill="#000" opacity=".12"/>
+      <circle cx="27" cy="25" r="10" fill="#3d2510"/><circle cx="27" cy="25" r="8" fill="#f2b440"/><circle cx="27" cy="26" r="4.4" fill="#f7d79a"/><g transform="matrix(-1 0 0 1 100 0)"><circle cx="27" cy="25" r="10" fill="#3d2510"/><circle cx="27" cy="25" r="8" fill="#f2b440"/><circle cx="27" cy="26" r="4.4" fill="#f7d79a"/></g>
+    <clipPath id="cb"><path d="M20 51A30 29 0 1 1 80 51A30 29 0 1 1 20 51Z"/></clipPath>
+    <path d="M20 51A30 29 0 1 1 80 51A30 29 0 1 1 20 51Z" fill="#f2b440"/>
+    <g clip-path="url(#cb)">
+      <circle cx="36" cy="30" r="3" fill="none" stroke="#4a2c12" stroke-width="2" stroke-dasharray="3.2 1.8"/><circle cx="36" cy="30" r="1" fill="#c9821c"/><circle cx="50" cy="25" r="3" fill="none" stroke="#4a2c12" stroke-width="2" stroke-dasharray="3.2 1.8"/><circle cx="50" cy="25" r="1" fill="#c9821c"/><circle cx="64" cy="30" r="3" fill="none" stroke="#4a2c12" stroke-width="2" stroke-dasharray="3.2 1.8"/><circle cx="64" cy="30" r="1" fill="#c9821c"/><circle cx="27" cy="44" r="3" fill="none" stroke="#4a2c12" stroke-width="2" stroke-dasharray="3.2 1.8"/><circle cx="27" cy="44" r="1" fill="#c9821c"/><circle cx="73" cy="44" r="3" fill="none" stroke="#4a2c12" stroke-width="2" stroke-dasharray="3.2 1.8"/><circle cx="73" cy="44" r="1" fill="#c9821c"/><circle cx="42" cy="36" r="3" fill="none" stroke="#4a2c12" stroke-width="2" stroke-dasharray="3.2 1.8"/><circle cx="42" cy="36" r="1" fill="#c9821c"/><circle cx="58" cy="36" r="3" fill="none" stroke="#4a2c12" stroke-width="2" stroke-dasharray="3.2 1.8"/><circle cx="58" cy="36" r="1" fill="#c9821c"/><circle cx="25" cy="58" r="3" fill="none" stroke="#4a2c12" stroke-width="2" stroke-dasharray="3.2 1.8"/><circle cx="25" cy="58" r="1" fill="#c9821c"/><circle cx="75" cy="58" r="3" fill="none" stroke="#4a2c12" stroke-width="2" stroke-dasharray="3.2 1.8"/><circle cx="75" cy="58" r="1" fill="#c9821c"/>
+      <ellipse cx="70" cy="76" rx="42" ry="34" fill="#000" opacity=".11"/>
+      <ellipse cx="33" cy="27" rx="17" ry="10" fill="#fff" opacity=".2" transform="rotate(-20 33 27)"/>
+    </g>
+      <circle cx="43.5" cy="64" r="8" fill="#fff3dc"/><g transform="matrix(-1 0 0 1 100 0)"><circle cx="43.5" cy="64" r="8" fill="#fff3dc"/></g>
+      <ellipse cx="50" cy="72" rx="7" ry="4.6" fill="#fff3dc"/>
+    <ellipse cx="38" cy="47" rx="8.5" ry="9.5" fill="#fff" stroke="#2a1d16" stroke-opacity=".35" stroke-width="1.2"/>
+    <circle cx="38.8" cy="48.2" r="4.93" fill="#c98a1a"/>
+    <circle cx="38.8" cy="48.2" r="2.7115" fill="#1a1210"/>
+    <circle cx="40.4" cy="45.8" r="1.7748" fill="#fff"/>
+    <ellipse cx="62" cy="47" rx="8.5" ry="9.5" fill="#fff" stroke="#2a1d16" stroke-opacity=".35" stroke-width="1.2"/>
+    <circle cx="62.8" cy="48.2" r="4.93" fill="#c98a1a"/>
+    <circle cx="62.8" cy="48.2" r="2.7115" fill="#1a1210"/>
+    <circle cx="64.4" cy="45.8" r="1.7748" fill="#fff"/>
+      <path d="M32 37Q38 33 44 36" stroke="#4a2c12" stroke-width="2.6" fill="none" stroke-linecap="round"/><g transform="matrix(-1 0 0 1 100 0)"><path d="M32 37Q38 33 44 36" stroke="#4a2c12" stroke-width="2.6" fill="none" stroke-linecap="round"/></g>
+    <path d="M44.5 57Q50 54 55.5 57Q54.5 62 50 63Q45.5 62 44.5 57Z" fill="#b4574a"/>
+    <ellipse cx="48.35" cy="57.4" rx="1.65" ry="1.1" fill="#fff" opacity=".45"/>
+    <clipPath id="bb"><path d="M44 66Q50 75 56 66Q50 67.8 44 66Z"/></clipPath>
+    <path d="M44 66Q50 75 56 66Q50 67.8 44 66Z" fill="#5e1b22" stroke="#2a1d16" stroke-width="1.4" stroke-linejoin="round"/>
+    <g clip-path="url(#bb)">
+      <rect x="44" y="64" width="12" height="4.52" fill="#fff"/>
+      <ellipse cx="50" cy="71.7" rx="3.5999999999999996" ry="2.2800000000000002" fill="#ff7d8c"/>
+    </g>
+    <path d="M46.28 67.92l1.6 3.4l1.6-3.6Z" fill="#fff"/><g transform="matrix(-1 0 0 1 100 0)"><path d="M46.28 67.92l1.6 3.4l1.6-3.6Z" fill="#fff"/></g>
+      <circle cx="40" cy="64" r=".9" fill="#4a2c12"/><circle cx="37" cy="62" r=".9" fill="#4a2c12"/><circle cx="38" cy="66.5" r=".9" fill="#4a2c12"/><g transform="matrix(-1 0 0 1 100 0)"><circle cx="40" cy="64" r=".9" fill="#4a2c12"/><circle cx="37" cy="62" r=".9" fill="#4a2c12"/><circle cx="38" cy="66.5" r=".9" fill="#4a2c12"/></g></svg>

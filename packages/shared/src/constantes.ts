@@ -1,7 +1,7 @@
 import type { Config } from './tipos';
 
 /** Nome provisório do jogo. Trocar aqui troca em todo lugar. */
-export const NOME_DO_JOGO = 'Rabisco';
+export const NOME_DO_JOGO = 'Stopou!';
 
 export const MIN_JOGADORES = 2;
 export const MAX_JOGADORES = 10;
@@ -13,7 +13,7 @@ export const MIN_RODADAS = 1;
 export const MAX_RODADAS = 15;
 export const MIN_TEMPO_RODADA = 30;
 export const MAX_TEMPO_RODADA = 300;
-export const TOTAL_AVATARES = 12;
+export const TOTAL_AVATARES = 24;
 
 export const TAMANHO_CODIGO = 5;
 /** Sem I, L, O e Q: letras que se confundem quando o código é ditado ou lido rápido. */

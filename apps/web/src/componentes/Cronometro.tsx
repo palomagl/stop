@@ -25,15 +25,14 @@ export function Cronometro({ terminaEm, grande = false }: { terminaEm: number | 
   }, [segundos]);
 
   const urgente = segundos <= 10;
-  const minutos = Math.floor(segundos / 60);
-  const texto = minutos > 0 ? `${minutos}:${String(segundos % 60).padStart(2, '0')}` : String(segundos);
+  const texto = `${Math.floor(segundos / 60)}:${String(segundos % 60).padStart(2, '0')}`;
 
   return (
     <div className="flex items-center gap-2">
       <span
         aria-hidden="true"
-        className={`inline-block font-mao font-bold tabular-nums leading-none ${grande ? 'text-5xl' : 'text-3xl'} ${
-          urgente ? 'text-errado' : 'text-tinta'
+        className={`titulo inline-block tabular-nums ${grande ? 'text-5xl' : 'text-3xl'} ${
+          urgente ? 'text-coral' : 'text-white'
         } ${urgente && segundos > 0 ? 'pulsando' : ''}`}
       >
         {texto}

@@ -1,52 +1,45 @@
 import { NOME_DO_JOGO } from '@rabisco/shared';
+import { Tic } from './Tic';
 
-/** Placa de "pare" desenhada à mão, com um R rabiscado. Funciona de 16 px a tela inteira. */
-export function IconeLogo({ tamanho = 40, className = '' }: { tamanho?: number; className?: string }) {
+/** Palavra do logo: amarela, com contorno grosso e sombra dura, levemente inclinada. */
+function Palavra({ tamanho }: { tamanho: string }) {
   return (
-    <svg width={tamanho} height={tamanho} viewBox="0 0 64 64" aria-hidden="true" className={className}>
-      <path
-        d="M21 4h22l17 17v22L43 60H21L4 43V21z"
-        fill="#e2492f"
-        stroke="var(--tinta)"
-        strokeWidth="3"
-        strokeLinejoin="round"
-        transform="rotate(-6 32 32)"
-      />
-      <path
-        d="M23 47V18c6-2 16-2 17 5 1 7-8 9-16 9 7 2 12 8 16 14"
-        fill="none"
-        stroke="#fff"
-        strokeWidth="5.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <span
+      className={`inline-block -rotate-3 font-titulo leading-[0.9] tracking-[0.01em] text-amarelo ${tamanho}`}
+      style={{
+        WebkitTextStroke: '0.16em #0b1638',
+        paintOrder: 'stroke fill',
+        textShadow: '0 0.1em 0 #0b1638',
+      }}
+    >
+      {NOME_DO_JOGO.toUpperCase()}
+    </span>
   );
 }
 
 export function Logo({ grande = false }: { grande?: boolean }) {
-  return (
-    <span className={`inline-flex items-center ${grande ? 'gap-3' : 'gap-2'}`}>
-      <IconeLogo tamanho={grande ? 84 : 34} className={grande ? '-rotate-3' : ''} />
-      <span className="relative inline-block">
-        <span className={`font-mao font-bold leading-none ${grande ? 'text-7xl sm:text-8xl' : 'text-3xl'}`}>
-          {NOME_DO_JOGO}
+  if (!grande) {
+    return (
+      <span className="inline-flex items-center gap-1.5" aria-label={NOME_DO_JOGO}>
+        <Tic tamanho={34} humor="feliz" />
+        <span aria-hidden="true">
+          <Palavra tamanho="text-[1.7rem]" />
         </span>
-        {/* Sublinhado rabiscado de caneta */}
-        <svg
-          viewBox="0 0 200 16"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-          className={`absolute left-0 w-full ${grande ? '-bottom-3 h-4' : '-bottom-1.5 h-2'}`}
-        >
-          <path
-            d="M3 10 C 40 4, 80 13, 120 7 S 180 5, 197 9"
-            fill="none"
-            stroke="var(--stop)"
-            strokeWidth="4"
-            strokeLinecap="round"
-          />
-        </svg>
+      </span>
+    );
+  }
+
+  return (
+    <span className="relative inline-flex flex-col items-center" aria-label={`${NOME_DO_JOGO} Adedonha online`}>
+      <Tic tamanho={150} className="-mb-6" />
+      <span aria-hidden="true" className="relative">
+        <Palavra tamanho="text-[4.6rem] sm:text-[5.5rem]" />
+      </span>
+      <span
+        aria-hidden="true"
+        className="mt-1 -rotate-3 rounded-xl border-[3px] border-[#0b1638] bg-coral px-4 py-0.5 font-titulo text-lg tracking-[0.08em] text-white shadow-[0_4px_0_#0b1638]"
+      >
+        ADEDONHA ONLINE
       </span>
     </span>
   );

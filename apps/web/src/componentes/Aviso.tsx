@@ -19,10 +19,11 @@ export function Aviso() {
             key={aviso.id}
             type="button"
             onClick={() => fecharAviso(aviso.id)}
-            initial={{ y: -20, opacity: 0, rotate: -2 }}
-            animate={{ y: 0, opacity: 1, rotate: -1 }}
-            exit={{ y: -20, opacity: 0 }}
-            className="pointer-events-auto max-w-sm rounded-lg border-2 border-tinta bg-marca-texto px-4 py-2 text-left font-bold text-[#1f2a44] shadow-[3px_3px_0_var(--sombra)]"
+            initial={{ y: -24, opacity: 0, scale: 0.9 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: -24, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            className="pointer-events-auto max-w-sm rounded-2xl border-[3px] border-[#0b1638] bg-amarelo px-4 py-2.5 text-left font-bold text-[#0b1638] shadow-[0_5px_0_#0b1638]"
           >
             {aviso.texto}
           </motion.button>

@@ -29,7 +29,7 @@ export function Resultado({ sala }: { sala: EstadoSala }) {
     <div className="flex items-center gap-3">
       <button
         type="button"
-        className={`adesivo h-14 flex-1 text-xl ${estouPronto ? 'adesivo-azul' : 'adesivo-amarelo'}`}
+        className={`botao h-14 flex-1 whitespace-nowrap px-3 text-xl disabled:opacity-90 ${estouPronto ? 'botao-menta' : 'botao-amarelo'}`}
         disabled={estouPronto}
         onClick={() => {
           sons.pop();
@@ -38,7 +38,7 @@ export function Resultado({ sala }: { sala: EstadoSala }) {
       >
         {estouPronto ? '✓ Pronto' : ultima ? 'Ver o pódio!' : 'Próxima rodada!'}
       </button>
-      <div className="w-24 text-sm font-bold leading-tight text-tinta-suave">
+      <div className="w-24 text-sm font-extrabold leading-tight text-texto-suave">
         <span aria-live="polite">
           {prontos} de {online.length} prontos
         </span>
@@ -51,10 +51,10 @@ export function Resultado({ sala }: { sala: EstadoSala }) {
 
   return (
     <Tela rodape={rodape}>
-      <p className="text-sm font-bold text-tinta-suave">
+      <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-texto-suave">
         Letra {sala.letra} · rodada {sala.rodada} de {sala.config.rodadas}
       </p>
-      <h1 className="mb-5 font-mao text-4xl font-bold">Placar da rodada</h1>
+      <h1 className="titulo mt-1 mb-5 text-4xl">Placar da rodada</h1>
 
       <LayoutGroup>
         <ol className="flex flex-col gap-2">
@@ -65,14 +65,14 @@ export function Resultado({ sala }: { sala: EstadoSala }) {
                 key={l.jogadorId}
                 layout
                 transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-                className={`flex items-center gap-3 rounded-xl border-2 bg-papel px-3 py-2 ${
-                  l.jogadorId === sala.meuId ? 'border-caneta' : 'border-tinta/20'
+                className={`cartao flex items-center gap-3 px-2.5 py-2 ${
+                  l.jogadorId === sala.meuId ? 'ring-4 ring-amarelo' : ''
                 }`}
               >
-                <span className="w-8 text-center font-mao text-3xl font-bold">{reordenado ? l.posicao : l.posicaoAnterior}º</span>
-                <Avatar id={l.avatar} tamanho={38} />
+                <span className="w-9 text-center font-titulo text-3xl">{reordenado ? l.posicao : l.posicaoAnterior}º</span>
+                <Avatar id={l.avatar} tamanho={48} />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-bold">{l.apelido}</span>
+                  <span className="block truncate text-lg font-extrabold leading-tight">{l.apelido}</span>
                   {subiu && (
                     <motion.span
                       initial={{ opacity: 0, y: 6 }}
@@ -87,14 +87,14 @@ export function Resultado({ sala }: { sala: EstadoSala }) {
                   initial={{ scale: 0, rotate: -20 }}
                   animate={{ scale: 1, rotate: -6 }}
                   transition={{ delay: 0.3, type: 'spring' }}
-                  className="font-mao text-3xl font-bold text-errado"
+                  className="font-titulo text-3xl text-coral [text-shadow:0_2px_0_#0b1638]"
                   aria-label={`${l.pontosRodada} pontos nesta rodada`}
                 >
                   +{l.pontosRodada}
                 </motion.span>
                 <span className="w-16 text-right">
-                  <span className="block text-xs font-bold text-tinta-suave">total</span>
-                  <span className="font-mao text-3xl font-bold">{l.total}</span>
+                  <span className="block text-xs font-extrabold uppercase tracking-wider text-tinta-suave">total</span>
+                  <span className="font-titulo text-3xl">{l.total}</span>
                 </span>
               </motion.li>
             );

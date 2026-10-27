@@ -15,11 +15,11 @@ async function entrarPorCodigo(pagina: Page, codigo: string, apelido: string) {
   await pagina.getByRole('button', { name: 'Entrar com código' }).click();
   await pagina.getByLabel('Código da sala').fill(codigo);
   await pagina.getByLabel('Seu apelido').fill(apelido);
-  await pagina.getByRole('radio', { name: 'Estrela' }).click();
+  await pagina.getByRole('radio', { name: 'Panda' }).click();
   await pagina.getByRole('button', { name: 'Entrar', exact: true }).click();
 }
 
-const campos = (pagina: Page) => pagina.locator('input.linha-escrita');
+const campos = (pagina: Page) => pagina.locator('form input.campo');
 
 test('duas pessoas criam e entram na sala, jogam uma rodada e veem o placar', async ({ browser }) => {
   const ana = await (await browser.newContext()).newPage();

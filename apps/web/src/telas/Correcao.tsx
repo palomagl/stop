@@ -50,7 +50,7 @@ export function Correcao({ sala }: { sala: EstadoSala }) {
     <div className="flex items-center gap-3">
       <button
         type="button"
-        className={`adesivo h-14 flex-1 text-xl ${estouPronto ? 'adesivo-azul' : 'adesivo-amarelo'}`}
+        className={`botao h-14 flex-1 whitespace-nowrap px-3 text-xl disabled:opacity-90 ${estouPronto ? 'botao-menta' : 'botao-amarelo'}`}
         disabled={estouPronto}
         onClick={() => {
           sons.pop();
@@ -59,25 +59,25 @@ export function Correcao({ sala }: { sala: EstadoSala }) {
       >
         {estouPronto ? '✓ Pronto' : correcao.indice + 1 < total ? 'Pronto, próxima!' : 'Pronto, ver pontos!'}
       </button>
-      <p className="w-24 text-sm font-bold leading-tight text-tinta-suave" aria-live="polite">
+      <p className="w-24 text-sm font-extrabold leading-tight text-texto-suave" aria-live="polite">
         {prontos} de {esperando.length} prontos
       </p>
     </div>
   ) : (
-    <p className="text-center font-bold text-tinta-suave">Você entra na próxima rodada. Pode ir assistindo!</p>
+    <p className="text-center font-bold text-texto-suave">Você entra na próxima rodada. Pode ir assistindo!</p>
   );
 
   return (
     <Tela rodape={rodape}>
-      <div className="mb-4 flex items-start justify-between gap-3">
+      <div className="mb-2 flex items-end justify-between gap-3">
         <div>
-          <p className="text-sm font-bold text-tinta-suave">
+          <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-texto-suave">
             Correção · letra {letra} · {correcao.indice + 1} de {total}
           </p>
-          <h1 className="font-mao text-4xl font-bold leading-tight">
+          <h1 className="titulo mt-1 text-4xl uppercase">
             {correcao.categoria}
             {Object.hasOwn(DICAS_CATEGORIA, correcao.categoria) && (
-              <span className="block font-sans text-base font-semibold text-tinta-suave">
+              <span className="mt-1 block font-sans text-base font-bold normal-case text-texto-suave [text-shadow:none]">
                 {DICAS_CATEGORIA[correcao.categoria]}
               </span>
             )}
@@ -86,16 +86,16 @@ export function Correcao({ sala }: { sala: EstadoSala }) {
         <Cronometro terminaEm={sala.terminaEm} />
       </div>
 
-      <div className="mb-4 flex gap-1" aria-hidden="true">
+      <div className="mb-3 flex gap-1" aria-hidden="true">
         {sala.config.categorias.map((c, i) => (
           <span
             key={c}
-            className={`h-1.5 flex-1 rounded-full ${i < correcao.indice ? 'bg-tinta-suave' : i === correcao.indice ? 'bg-caneta' : 'bg-tinta/15'}`}
+            className={`h-2 flex-1 rounded-full ${i < correcao.indice ? 'bg-coral/70' : i === correcao.indice ? 'bg-coral' : 'bg-white/20'}`}
           />
         ))}
       </div>
 
-      <p className="mb-4 text-sm text-tinta-suave">
+      <p className="mb-3 text-sm font-semibold text-texto-suave">
         Vote 👍 se vale ou 👎 se não vale. Maioria de 👎 anula; empate mantém.
       </p>
 
@@ -122,13 +122,14 @@ export function Correcao({ sala }: { sala: EstadoSala }) {
             <motion.li
               key={r.jogadorId}
               variants={{ escondido: { opacity: 0, x: -12 }, visivel: { opacity: 1, x: 0 } }}
-              className="rounded-xl border-2 border-tinta/20 bg-papel p-3"
+              className="cartao flex gap-3 p-2.5"
             >
-              <div className="flex items-center gap-3">
-                <Avatar id={r.avatar} tamanho={36} />
-                <span className="min-w-0 flex-1 truncate font-bold">
+              <Avatar id={r.avatar} tamanho={58} className="self-start" />
+              <div className="min-w-0 flex-1">
+              <div className="flex items-start gap-2">
+                <span className="min-w-0 flex-1 truncate text-sm font-extrabold text-tinta-suave">
                   {r.apelido}
-                  {minha && <span className="font-semibold text-tinta-suave"> (você)</span>}
+                  {minha && <span className="font-semibold"> (você)</span>}
                 </span>
                 <span aria-live="polite">
                   {anulada ? (
@@ -140,17 +141,17 @@ export function Correcao({ sala }: { sala: EstadoSala }) {
               </div>
 
               <p
-                className={`mt-1 break-words pl-12 font-mao text-3xl leading-tight ${
-                  anulada ? 'text-tinta-suave line-through decoration-errado decoration-2' : 'text-caneta'
+                className={`break-words text-2xl font-extrabold leading-tight ${
+                  anulada ? 'text-tinta-suave line-through decoration-errado decoration-[3px]' : 'text-tinta'
                 }`}
               >
-                {r.texto || <span className="text-xl italic">(em branco)</span>}
+                {r.texto || <span className="text-lg font-semibold italic">(em branco)</span>}
               </p>
 
               {!r.motivo && (
-                <div className="mt-2 flex items-center gap-2 pl-12">
+                <div className="mt-1.5 flex items-center gap-2">
                   {minha || !souParticipante ? (
-                    <span className="text-sm font-bold text-tinta-suave">
+                    <span className="text-sm font-extrabold text-tinta-suave">
                       👍 {sim} · 👎 {nao}
                     </span>
                   ) : (
@@ -165,6 +166,7 @@ export function Correcao({ sala }: { sala: EstadoSala }) {
                   )}
                 </div>
               )}
+              </div>
             </motion.li>
           );
         })}
@@ -190,8 +192,10 @@ function BotaoVoto({
       onClick={onClick}
       aria-pressed={ativo}
       aria-label={rotulo}
-      className={`flex h-11 min-w-16 items-center justify-center gap-1.5 rounded-full border-2 px-3 text-lg font-bold transition active:scale-95 ${
-        ativo ? 'border-caneta bg-marca-texto/60 ring-2 ring-caneta' : 'border-tinta/25'
+      className={`flex h-10 min-w-16 items-center justify-center gap-1.5 rounded-full border-[3px] px-3 text-lg font-extrabold transition active:scale-95 ${
+        ativo
+          ? 'border-[#0b1638] bg-amarelo text-[#0b1638] shadow-[0_3px_0_#0b1638]'
+          : 'border-tinta-suave/40 text-tinta'
       }`}
     >
       {children}

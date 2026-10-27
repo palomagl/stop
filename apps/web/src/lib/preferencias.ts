@@ -25,7 +25,7 @@ export function alternarTema() {
   const tema: Tema = atual.tema === 'claro' ? 'escuro' : 'claro';
   // O tema fica no localStorage como texto puro, porque o index.html lê antes do React.
   try {
-    localStorage.setItem('rabisco:tema', tema);
+    localStorage.setItem('stopou:tema', tema);
   } catch {
     // sem armazenamento: vale só nesta visita
   }

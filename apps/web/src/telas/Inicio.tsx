@@ -14,8 +14,8 @@ type Modo = 'inicio' | 'criar' | 'entrar' | 'jogarAgora' | 'ranking' | 'historic
 type ModoFormulario = 'criar' | 'entrar' | 'jogarAgora';
 
 const TITULOS: Record<ModoFormulario, string> = {
-  criar: 'Criar uma sala',
-  entrar: 'Entrar numa sala',
+  criar: 'Criar sala',
+  entrar: 'Entrar na sala',
   jogarAgora: 'Jogar agora',
 };
 
@@ -37,44 +37,48 @@ export function Inicio() {
   if (modo === 'ranking') return <Ranking aoVoltar={() => setModo('inicio')} />;
   if (modo === 'historico') return <Historico aoVoltar={() => setModo('inicio')} />;
 
+  if (modo !== 'inicio') {
+    return <Formulario modo={modo} codigoInicial={codigoInicial ?? ''} aoVoltar={() => setModo('inicio')} />;
+  }
+
   return (
     <Tela>
-      <div className="flex flex-col items-center pt-6 text-center sm:pt-12">
-        <motion.div initial={{ rotate: -8, scale: 0.8, opacity: 0 }} animate={{ rotate: 0, scale: 1, opacity: 1 }}>
+      <div className="flex flex-col items-center pt-4 text-center sm:pt-8">
+        <motion.div
+          initial={{ y: -30, scale: 0.85, opacity: 0 }}
+          animate={{ y: 0, scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+        >
           <h1>
             <Logo grande />
           </h1>
         </motion.div>
-        <p className="mt-8 max-w-xs font-mao text-2xl leading-snug text-tinta-suave">
-          O Stop do caderno, agora no celular. Uma letra, um cronômetro e quem gritar primeiro.
+        <p className="mt-5 max-w-xs text-lg font-bold leading-snug text-texto-suave">
+          Sorteia a letra, todo mundo escreve e quem terminar primeiro grita!
         </p>
       </div>
 
-      {modo === 'inicio' ? (
-        <div className="mx-auto mt-10 flex max-w-xs flex-col gap-4">
-          <button type="button" className="adesivo adesivo-amarelo -rotate-1 text-xl" onClick={() => setModo('criar')}>
-            Criar sala
+      <div className="mx-auto mt-7 flex max-w-sm flex-col gap-4">
+        <button type="button" className="botao botao-amarelo w-full text-2xl" onClick={() => setModo('criar')}>
+          Criar sala
+        </button>
+        <button type="button" className="botao w-full text-2xl" onClick={() => setModo('entrar')}>
+          Entrar com código
+        </button>
+        <button type="button" className="botao botao-coral w-full text-2xl" onClick={() => setModo('jogarAgora')}>
+          Jogar agora
+          <small>com quem estiver online</small>
+        </button>
+        <nav className="mt-2 flex justify-center gap-3" aria-label="Mais">
+          <button type="button" className="chip px-4 py-2 text-sm hover:bg-white/20" onClick={() => setModo('ranking')}>
+            <span aria-hidden="true">🏆</span> Ranking
           </button>
-          <button type="button" className="adesivo rotate-1 text-xl" onClick={() => setModo('entrar')}>
-            Entrar com código
+          <button type="button" className="chip px-4 py-2 text-sm hover:bg-white/20" onClick={() => setModo('historico')}>
+            <span aria-hidden="true">📒</span> Minhas partidas
           </button>
-          <button type="button" className="adesivo adesivo-azul -rotate-1 flex-col gap-0 text-xl" onClick={() => setModo('jogarAgora')}>
-            Jogar agora
-            <span className="text-xs font-bold opacity-90">com quem estiver online</span>
-          </button>
-          <nav className="mt-2 flex justify-center gap-6 font-bold" aria-label="Mais">
-            <button type="button" className="py-2 underline decoration-2 underline-offset-4" onClick={() => setModo('ranking')}>
-              🏆 Ranking
-            </button>
-            <button type="button" className="py-2 underline decoration-2 underline-offset-4" onClick={() => setModo('historico')}>
-              📒 Minhas partidas
-            </button>
-          </nav>
-          <BotaoInstalar />
-        </div>
-      ) : (
-        <Formulario modo={modo} codigoInicial={codigoInicial ?? ''} aoVoltar={() => setModo('inicio')} />
-      )}
+        </nav>
+        <BotaoInstalar />
+      </div>
     </Tela>
   );
 }
@@ -110,86 +114,102 @@ function Formulario({ modo, codigoInicial, aoVoltar }: { modo: ModoFormulario; c
     if (falha) setErro(falha);
   }
 
-  return (
-    <form onSubmit={enviar} className="cartao mx-auto mt-8 flex max-w-md flex-col gap-5 p-5" noValidate>
-      <h2 className="font-mao text-3xl font-bold">{TITULOS[modo]}</h2>
-      {modo === 'jogarAgora' && (
-        <p className="-mt-3 text-sm text-tinta-suave">
-          Você entra numa sala pública com outras pessoas. Se não tiver nenhuma aberta, uma nova é criada para você.
-        </p>
-      )}
+  const escolhido = AVATARES[avatar] ?? AVATARES[0]!;
 
-      {modo === 'entrar' && (
-        <label className="flex flex-col gap-1">
-          <span className="rotulo">Código da sala</span>
+  return (
+    <Tela
+      rodape={
+        <div className="flex flex-col gap-1.5">
+          {erro && (
+            <p role="alert" className="text-center font-bold text-amarelo">
+              {erro}
+            </p>
+          )}
+          <button type="submit" form="form-entrada" className="botao botao-amarelo w-full text-2xl" disabled={enviando}>
+            {enviando ? 'Só um instante…' : BOTOES[modo]}
+          </button>
+        </div>
+      }
+    >
+      <form id="form-entrada" onSubmit={enviar} className="flex flex-col gap-4" noValidate>
+        <div className="flex items-center justify-between">
+          <button type="button" className="chip py-1.5 hover:bg-white/20" onClick={aoVoltar}>
+            ← Voltar
+          </button>
+        </div>
+        <div>
+          <h2 className="titulo text-4xl">{TITULOS[modo]}</h2>
+          {modo === 'jogarAgora' && (
+            <p className="mt-2 font-semibold text-texto-suave">
+              Você entra numa sala pública com outras pessoas. Se não tiver nenhuma aberta, uma nova é criada para você.
+            </p>
+          )}
+        </div>
+
+        {modo === 'entrar' && (
+          <label className="cartao flex flex-col gap-1 px-4 py-3">
+            <span className="rotulo">Código da sala</span>
+            <input
+              className="campo font-titulo text-3xl uppercase tracking-[0.35em]"
+              value={codigo}
+              onChange={(e) => setCodigo(e.target.value.toUpperCase().replace(/[^A-Z]/g, ''))}
+              maxLength={TAMANHO_CODIGO}
+              autoCapitalize="characters"
+              autoComplete="off"
+              spellCheck={false}
+              inputMode="text"
+              placeholder="GATOS"
+              autoFocus={!codigoInicial}
+              required
+            />
+          </label>
+        )}
+
+        <label className="cartao flex flex-col gap-1 px-4 py-3">
+          <span className="flex justify-between">
+            <span className="rotulo">Seu apelido</span>
+            <span className="text-xs font-bold text-tinta-suave" aria-hidden="true">
+              {apelido.length}/{MAX_APELIDO}
+            </span>
+          </span>
           <input
-            className="linha-escrita font-mono uppercase tracking-[0.4em]"
-            value={codigo}
-            onChange={(e) => setCodigo(e.target.value.toUpperCase().replace(/[^A-Z]/g, ''))}
-            maxLength={TAMANHO_CODIGO}
-            autoCapitalize="characters"
-            autoComplete="off"
-            spellCheck={false}
-            inputMode="text"
-            placeholder="GATOS"
-            autoFocus={!codigoInicial}
+            className="campo"
+            value={apelido}
+            onChange={(e) => setApelido(e.target.value)}
+            maxLength={MAX_APELIDO}
+            autoComplete="nickname"
+            placeholder="Como te chamam?"
+            autoFocus={modo !== 'entrar' || Boolean(codigoInicial)}
             required
           />
         </label>
-      )}
 
-      <label className="flex flex-col gap-1">
-        <span className="rotulo">Seu apelido</span>
-        <input
-          className="linha-escrita"
-          value={apelido}
-          onChange={(e) => setApelido(e.target.value)}
-          maxLength={MAX_APELIDO}
-          autoComplete="nickname"
-          placeholder="Como te chamam?"
-          autoFocus={modo !== 'entrar' || Boolean(codigoInicial)}
-          required
-        />
-        <span className="text-right text-xs text-tinta-suave">
-          {apelido.length}/{MAX_APELIDO}
-        </span>
-      </label>
-
-      <fieldset>
-        <legend className="rotulo mb-2">Escolha seu rabisco</legend>
-        <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Avatar">
-          {AVATARES.map((a, i) => (
-            <button
-              key={a.nome}
-              type="button"
-              role="radio"
-              aria-checked={avatar === i}
-              aria-label={a.nome}
-              onClick={() => setAvatar(i)}
-              className={`grid aspect-square place-items-center rounded-xl border-2 transition ${
-                avatar === i ? 'scale-105 border-caneta bg-marca-texto/40' : 'border-transparent'
-              }`}
-            >
-              <Avatar id={i} tamanho={52} />
-            </button>
-          ))}
-        </div>
-      </fieldset>
-
-      {erro && (
-        <p role="alert" className="font-bold text-errado">
-          {erro}
-        </p>
-      )}
-
-      <div className="flex flex-col gap-3">
-        <button type="submit" className="adesivo adesivo-amarelo text-xl" disabled={enviando}>
-          {enviando ? 'Só um instante…' : BOTOES[modo]}
-        </button>
-        <button type="button" className="py-2 font-bold text-tinta-suave underline" onClick={aoVoltar}>
-          Voltar
-        </button>
-      </div>
-    </form>
+        <fieldset>
+          <legend className="titulo mb-1 text-2xl">Escolha seu bicho</legend>
+          <p className="mb-3 text-sm font-bold text-texto-suave" aria-live="polite">
+            {escolhido.nome}
+          </p>
+          <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-6" role="radiogroup" aria-label="Avatar">
+            {AVATARES.map((a, i) => (
+              <button
+                key={a.nome}
+                type="button"
+                role="radio"
+                aria-checked={avatar === i}
+                aria-label={a.nome}
+                onClick={() => setAvatar(i)}
+                className={`rounded-[22%] transition ${
+                  avatar === i
+                    ? 'scale-105 shadow-[0_0_0_3px_#0b1638,0_0_0_7px_var(--amarelo),0_0_22px_var(--amarelo)]'
+                    : 'opacity-90 hover:opacity-100'
+                }`}
+              >
+                <Avatar id={i} tamanho={120} className="h-auto w-full" />
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      </form>
+    </Tela>
   );
 }

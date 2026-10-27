@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react';
 
-/** Coluna central com as margens da folha. No celular ocupa tudo; no monitor fica centralizada. */
-export function Tela({ children, rodape }: { children: ReactNode; rodape?: ReactNode }) {
+/** Coluna central da tela. No celular ocupa tudo; no monitor fica centralizada e mais estreita. */
+export function Tela({ children, rodape, larga = false }: { children: ReactNode; rodape?: ReactNode; larga?: boolean }) {
+  const largura = larga ? 'max-w-3xl' : 'max-w-xl';
   return (
     <>
-      <main className="mx-auto w-full max-w-3xl flex-1 pb-6 pl-9 pr-4 pt-4 sm:pl-20 sm:pr-8">{children}</main>
+      <main className={`mx-auto w-full ${largura} flex-1 px-4 pb-8 pt-3 sm:px-6`}>{children}</main>
       {rodape && (
-        <div className="sticky bottom-0 z-20 border-t-2 border-tinta/15 bg-papel/95 backdrop-blur">
-          <div className="mx-auto w-full max-w-3xl py-3 pl-9 pr-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pl-20 sm:pr-8">
+        <div className="sticky bottom-0 z-20 border-t-2 border-white/10 bg-[var(--vidro)] backdrop-blur-md">
+          <div className={`mx-auto w-full ${largura} px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6`}>
             {rodape}
           </div>
         </div>

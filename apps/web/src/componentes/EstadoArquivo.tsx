@@ -1,21 +1,25 @@
 import type { ReactNode } from 'react';
 import type { EstadoBusca } from '../lib/useArquivo';
+import { Tic } from './Tic';
 
 /** Mostra carregando, desligado ou erro; quando os dados chegam, desenha o conteúdo. */
 export function EstadoArquivo<T>({ estado, children }: { estado: EstadoBusca<T>; children: (dados: T) => ReactNode }) {
   if (estado.tipo === 'carregando') {
     return (
-      <p role="status" className="font-mao text-2xl text-tinta-suave">
-        Folheando o caderno…
+      <p role="status" className="titulo py-8 text-center text-2xl">
+        Buscando…
       </p>
     );
   }
   if (estado.tipo === 'desligado') {
     return (
-      <p className="cartao p-4">
-        Este servidor não está guardando partidas. Quando ele tiver um banco de dados ligado, o ranking e o histórico
-        aparecem aqui.
-      </p>
+      <div className="cartao flex items-center gap-3 p-4">
+        <Tic tamanho={56} humor="dormindo" />
+        <p className="font-semibold">
+          Este servidor não está guardando partidas. Quando ele tiver um banco de dados ligado, o ranking e o histórico
+          aparecem aqui.
+        </p>
+      </div>
     );
   }
   if (estado.tipo === 'erro') {

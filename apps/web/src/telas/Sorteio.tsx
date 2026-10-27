@@ -46,7 +46,7 @@ export function Sorteio({ sala }: { sala: EstadoSala }) {
   return (
     <Tela>
       <div className="flex min-h-[70dvh] flex-col items-center justify-center gap-6 text-center">
-        <p className="font-mao text-3xl text-tinta-suave">
+        <p className="titulo text-3xl">
           Rodada {sala.rodada} de {sala.config.rodadas}
         </p>
         <motion.div
@@ -54,13 +54,13 @@ export function Sorteio({ sala }: { sala: EstadoSala }) {
           initial={parou ? { scale: 0.6, rotate: -20 } : false}
           animate={{ scale: 1, rotate: parou ? -4 : 0 }}
           transition={{ type: 'spring', stiffness: 400, damping: 14 }}
-          className="grid size-48 place-items-center rounded-full border-[5px] border-tinta bg-marca-texto shadow-[6px_6px_0_var(--sombra)] sm:size-60"
+          className="grid size-52 place-items-center rounded-full border-[6px] border-[#0b1638] bg-amarelo shadow-[0_10px_0_#0b1638] sm:size-64"
         >
-          <span className="font-mao text-[8rem] font-bold leading-none text-[#1f2a44] sm:text-[10rem]" aria-hidden="true">
+          <span className="font-titulo text-[8.5rem] leading-none text-[#0b1638] sm:text-[11rem]" aria-hidden="true">
             {letra}
           </span>
         </motion.div>
-        <p className="font-mao text-3xl font-bold" role="status" aria-live="assertive">
+        <p className="titulo text-3xl" role="status" aria-live="assertive">
           {parou ? `A letra é ${letraFinal}!` : 'Sorteando a letra…'}
         </p>
       </div>
