@@ -16,3 +16,6 @@ services:
       # Endereço do site na Vercel, ex.: https://rabisco.vercel.app (vários separados por vírgula)
       - key: ORIGENS_PERMITIDAS
         sync: false
+      # Connection string do Neon (Postgres grátis). Vazio desliga histórico e ranking.
+      - key: DATABASE_URL
+        sync: false

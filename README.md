@@ -34,6 +34,14 @@
 - **Sons originais**, sintetizados no navegador, com botão de silenciar que fica salvo.
 - **Feito para celular e para jogar com uma mão:** botões grandes, STOP fixo embaixo, Enter pula para o próximo campo. Funciona de 360 px até monitor grande.
 - **Acessível:** foco visível, tudo funciona pelo teclado, o cronômetro é anunciado para leitores de tela só aos 30 s, aos 10 s e no fim, e certo e errado nunca dependem só da cor (azul contra vermelho-alaranjado, sempre com ícone e texto). Respeita `prefers-reduced-motion`.
+- **Jogar agora:** entra numa sala pública com quem estiver online, ou abre uma nova. Quem é dono pode deixar qualquer sala pública ou particular.
+- **Categorias do seu jeito:** marque, desmarque e crie categorias novas. Dá para **salvar listas** ("Nossa lista", "Rapidinha"…) e aplicar com um toque. A próxima sala que você criar já nasce com as regras da última.
+- **Histórico e ranking:** suas últimas partidas e um ranking de vitórias, guardados no Postgres. Sem cadastro.
+- **Instala como app** no celular (PWA): ícone na tela inicial, abre em tela cheia e carrega rápido.
+
+<p align="center">
+  <img src="docs/fase2.png" width="720" alt="Quatro telas: a inicial com Criar sala, Entrar com código e Jogar agora; a sala com a opção Sala pública e uma lista salva; o ranking; e o histórico de partidas." />
+</p>
 
 <p align="center">
   <img src="docs/monitor.png" width="640" alt="Tela de fim de jogo num monitor, com o pódio e o resumo da partida." />
@@ -44,8 +52,10 @@
 | Parte | Tecnologias |
 |---|---|
 | `apps/web` | React 19, Vite, TypeScript, Tailwind CSS 4, Framer Motion |
-| `apps/server` | Node.js, TypeScript, Socket.IO |
+| `apps/server` | Node.js, TypeScript, Socket.IO, Postgres (`pg`) |
 | `packages/shared` | Tipos, nomes dos eventos, schemas Zod e regras de pontuação, usados pelos dois lados |
+| Banco | Postgres no Neon (grátis); nos testes, PGlite (Postgres em WebAssembly) |
+| App | PWA com `vite-plugin-pwa` |
 | Testes | Vitest (unidade e integração) e Playwright (ponta a ponta) |
 | CI | GitHub Actions: lint, checagem de tipos, testes e build a cada push |
 
@@ -59,7 +69,8 @@ apps/
     src/lib/           conexão com o servidor, relógio, sons, preferências
   server/              o juiz da partida
     src/jogo/          Sala (máquina de estados) e GerenciadorDeSalas
-    src/socket/        eventos do Socket.IO, validação e limite de eventos
+    src/socket/        eventos do Socket.IO, rotas HTTP, validação e limite de eventos
+    src/arquivo/       partidas terminadas: Postgres ou memória
 packages/
   shared/              regras que os dois lados precisam conhecer
 e2e/                   testes com dois navegadores
@@ -97,6 +108,15 @@ O servidor sempre manda o **retrato completo da sala** (`sala:estado`), já filt
 | `partida:iniciar`, `partida:jogarDeNovo` | `rodada:stop`: quem apertou, para o apito |
 | `resposta:rascunho`, `rodada:stop` | `reacao`: emoji flutuante |
 | `voto:enviar`, `correcao:pronto`, `resultado:pronto`, `reacao:enviar` | `jogador:removido` |
+| `sala:jogarAgora` (com confirmação) | |
+
+Fora do Socket.IO, há três rotas HTTP:
+
+| Rota | O que devolve |
+|---|---|
+| `GET /health` | se o servidor está de pé e se tem banco ligado |
+| `GET /ranking?dispositivo=…` | os 20 primeiros do ranking; a pessoa que pergunta vem marcada com `eu` |
+| `GET /historico?dispositivo=…` | as últimas 30 partidas daquele aparelho |
 
 ## Decisões
 
@@ -132,6 +152,20 @@ Assim, `"Abacaxi"`, `"abacaxis"` e `"ABACAXÍ"` viram a mesma resposta e valem 5
 
 A mesma função roda nos dois lados: o servidor usa para pontuar, e o navegador usa para mostrar na correção a prévia "vale 10" ou "vale 5".
 
+### Histórico e ranking sem cadastro
+
+Para jogar entre amigos, criar conta seria só atrito. Então cada aparelho ganha um **identificador anônimo** (um UUID guardado no `localStorage`), que vai junto ao entrar numa sala. Quando a partida termina com pelo menos uma rodada completa, o servidor guarda quem jogou, os pontos e a posição.
+
+- **Privacidade:** o identificador nunca sai do servidor. O ranking só devolve apelido, avatar, números e a marca `eu` para quem perguntou. Sem isso, qualquer pessoa poderia pegar o identificador de outra e ler o histórico dela.
+- **O ranking agrupa por aparelho** e mostra o apelido mais recente. Quem troca de apelido continua com as mesmas vitórias.
+- **Limites conhecidos:** limpar os dados do navegador ou trocar de celular começa um histórico novo, e dá para "inflar" o ranking jogando contra si mesmo em duas abas. Para um jogo entre amigos, é uma troca justa. Com contas de verdade, isso mudaria.
+- **A gravação é um comando SQL só** (um `INSERT` com CTE), então a partida e as participações entram juntas ou nada entra, sem depender de transação numa conexão específica do pool.
+- **Sem `DATABASE_URL`,** o servidor funciona normalmente e só desliga o histórico e o ranking. O site avisa isso, em vez de mostrar uma lista vazia.
+
+### Listas de categorias no aparelho
+
+As listas salvas ficam no `localStorage` de quem é dono da sala, e não no banco. Elas funcionam sem cadastro e sem servidor, e cada pessoa tem as suas. A troca é que elas não acompanham você para outro celular.
+
 ### O que mudaria com mais de um servidor
 
 Hoje as salas vivem na memória de um único processo, e isso basta para o tamanho do jogo. Para rodar em várias instâncias:
@@ -155,6 +189,12 @@ npm run dev
 
 Para testar no celular na mesma rede Wi-Fi, abra `http://IP-DO-COMPUTADOR:5173` e crie um `apps/web/.env.local` com `VITE_SERVER_URL=http://IP-DO-COMPUTADOR:3333`.
 
+Para ligar o histórico e o ranking localmente, aponte o servidor para um Postgres (as tabelas são criadas sozinhas):
+
+```bash
+DATABASE_URL=postgres://usuario:senha@localhost:5432/rabisco npm run dev
+```
+
 ### Testes
 
 ```bash
@@ -165,36 +205,45 @@ npm run typecheck
 ```
 
 - **Unidade:** pontuação (única, repetida, anulada), comparação sem acento e plural, validação da letra, schemas e todas as transições da máquina de estados, com relógio falso.
-- **Integração:** servidor de verdade e 3 clientes Socket.IO jogando uma rodada inteira, com alguém que cai e volta.
-- **Ponta a ponta:** dois navegadores criam e entram na sala, jogam uma rodada (um deles atualiza a página no meio) e chegam ao placar e ao pódio.
+- **Arquivo de partidas:** os mesmos testes rodam contra a versão em memória e contra um Postgres de verdade (PGlite), incluindo a ordem do ranking e do histórico.
+- **Integração:** servidor de verdade e 3 clientes Socket.IO jogando uma rodada inteira, com alguém que cai e volta. Também o "Jogar agora" e uma partida que termina e aparece no ranking e no histórico.
+- **Ponta a ponta:** dois navegadores criam e entram na sala, jogam uma rodada (um deles atualiza a página no meio) e chegam ao placar e ao pódio. Também: "Jogar agora" juntando duas pessoas, listas salvas e regras lembradas, e o aviso de ranking sem banco.
 
 ## Hospedando de graça
 
-### 1. Servidor no Render
+### 1. Banco no Neon (para histórico e ranking)
+
+1. Em [neon.tech](https://neon.tech), crie uma conta e um projeto. Escolha a região mais perto do servidor: `AWS US East (N. Virginia)`, a mesma do Render.
+2. Copie a **connection string** (começa com `postgresql://` e termina com `?sslmode=require`).
+
+As tabelas são criadas sozinhas na primeira vez que o servidor liga. Se pular este passo, o jogo funciona igual, só sem histórico e ranking.
+
+### 2. Servidor no Render
 
 1. Em [render.com](https://render.com), crie uma conta e escolha **New → Blueprint**.
 2. Selecione este repositório. O `render.yaml` já define tudo (Node 22, build, start e `/health`).
-3. Por enquanto, deixe `ORIGENS_PERMITIDAS` vazio. Anote a URL gerada, por exemplo `https://rabisco-servidor.onrender.com`.
+3. Em `DATABASE_URL`, cole a connection string do Neon. Deixe `ORIGENS_PERMITIDAS` vazio por enquanto.
+4. Anote a URL gerada, por exemplo `https://rabisco-servidor.onrender.com`. Abrindo `/health` nela, deve aparecer `"banco":true`.
 
-> O plano grátis do Render **dorme depois de ~15 minutos sem uso**, e a primeira visita depois disso leva até um minuto. O site mostra a tela "Acordando o servidor…" enquanto isso. Quando ele dorme, as salas abertas somem, o que está de acordo com a fase 1, que não tem banco.
+> O plano grátis do Render **dorme depois de ~15 minutos sem uso**, e a primeira visita depois disso leva até um minuto. O site mostra a tela "Acordando o servidor…" enquanto isso. Quando ele dorme, as salas abertas somem (as partidas terminadas continuam no Neon).
 
-### 2. Site na Vercel
+### 3. Site na Vercel
 
 1. Em [vercel.com](https://vercel.com), escolha **Add New → Project** e importe o repositório.
 2. Em **Root Directory**, escolha `apps/web`. A Vercel reconhece o Vite e os workspaces do npm.
 3. Em **Environment Variables**, crie `VITE_SERVER_URL` com a URL do Render.
 4. Faça o deploy e anote o endereço, por exemplo `https://rabisco.vercel.app`.
 
-### 3. Fechando o CORS
+### 4. Fechando o CORS
 
 Volte ao Render e preencha `ORIGENS_PERMITIDAS` com o endereço da Vercel. Dá para colocar vários, separados por vírgula. Assim, só o seu site consegue conectar ao servidor.
 
-## Próximos passos (fase 2)
+## Fases
 
-- Salas públicas com "Jogar agora".
-- Categorias personalizadas salvas.
-- Histórico de partidas e ranking com Postgres (Neon grátis).
-- Instalação como app (PWA).
+- **Fase 1:** salas por código, partida completa em tempo real, reconexão, visual, sons, acessibilidade, testes e CI.
+- **Fase 2:** salas públicas com "Jogar agora", listas de categorias salvas, histórico e ranking com Postgres, e instalação como app.
+
+Ideias para depois: contas opcionais para levar o histórico entre aparelhos, moderação de salas públicas (denunciar apelido) e um modo "revanche" com placar acumulado entre partidas.
 
 ## Originalidade
 
