@@ -15,7 +15,7 @@ async function entrarPorCodigo(pagina: Page, codigo: string, apelido: string) {
   await pagina.getByRole('button', { name: 'Entrar com código' }).click();
   await pagina.getByLabel('Código da sala').fill(codigo);
   await pagina.getByLabel('Seu apelido').fill(apelido);
-  await pagina.getByRole('radio', { name: 'Estrela' }).click();
+  await pagina.getByRole('radio', { name: 'Panda' }).click();
   await pagina.getByRole('button', { name: 'Entrar', exact: true }).click();
 }
 

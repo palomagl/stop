@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <path d="M12 100C14 86 28 79 50 79S86 86 88 100Z" fill="#c3bcd2"/>
+    <path d="M12 100C14 86 28 79 50 79S86 86 88 100Z" fill="#000" opacity=".12"/>
+      <ellipse cx="38" cy="16" rx="7.5" ry="19" fill="#cfc8dc" transform="rotate(-12 38 16)"/><ellipse cx="38" cy="17" rx="3.8" ry="13" fill="#f7b3c4" transform="rotate(-12 38 17)"/><g transform="matrix(-1 0 0 1 100 0)"><ellipse cx="38" cy="16" rx="7.5" ry="19" fill="#cfc8dc" transform="rotate(-12 38 16)"/><ellipse cx="38" cy="17" rx="3.8" ry="13" fill="#f7b3c4" transform="rotate(-12 38 17)"/></g>
+    <clipPath id="cb"><path d="M23 55A27 26 0 1 1 77 55A27 26 0 1 1 23 55Z"/></clipPath>
+    <path d="M23 55A27 26 0 1 1 77 55A27 26 0 1 1 23 55Z" fill="#d8d2e4"/>
+    <g clip-path="url(#cb)">
+      <ellipse cx="70" cy="76" rx="42" ry="34" fill="#000" opacity=".11"/>
+      <ellipse cx="33" cy="27" rx="17" ry="10" fill="#fff" opacity=".2" transform="rotate(-20 33 27)"/>
+    </g>
+      <circle cx="45" cy="65" r="6.6" fill="#f6f3fa"/><g transform="matrix(-1 0 0 1 100 0)"><circle cx="45" cy="65" r="6.6" fill="#f6f3fa"/></g>
+    <ellipse cx="39" cy="51" rx="8.5" ry="9.5" fill="#fff" stroke="#2a1d16" stroke-opacity=".35" stroke-width="1.2"/>
+    <circle cx="39.8" cy="52.2" r="4.93" fill="#6a4f9a"/>
+    <circle cx="39.8" cy="52.2" r="2.7115" fill="#1a1210"/>
+    <circle cx="41.4" cy="49.8" r="1.7748" fill="#fff"/>
+    <ellipse cx="61" cy="51" rx="8.5" ry="9.5" fill="#fff" stroke="#2a1d16" stroke-opacity=".35" stroke-width="1.2"/>
+    <circle cx="61.8" cy="52.2" r="4.93" fill="#6a4f9a"/>
+    <circle cx="61.8" cy="52.2" r="2.7115" fill="#1a1210"/>
+    <circle cx="63.4" cy="49.8" r="1.7748" fill="#fff"/>
+      <path d="M46.5 60.5Q50 58 53.5 60.5Q52 64 50 64.5Q48 64 46.5 60.5Z" fill="#f08aa0"/>
+      <path d="M46 67h8v6.5a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1Z" fill="#fff" stroke="#2a1d16" stroke-width="1.1"/>
+      <path d="M50 67v7.5" stroke="#2a1d16" stroke-width="1"/>
+      <ellipse cx="32" cy="64" rx="5.5" ry="3.4" fill="#ff7a7a" opacity="0.35"/><g transform="matrix(-1 0 0 1 100 0)"><ellipse cx="32" cy="64" rx="5.5" ry="3.4" fill="#ff7a7a" opacity="0.35"/></g></svg>

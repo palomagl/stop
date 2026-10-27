@@ -156,8 +156,8 @@ function Formulario({ modo, codigoInicial, aoVoltar }: { modo: ModoFormulario; c
       </label>
 
       <fieldset>
-        <legend className="rotulo mb-2">Escolha seu rabisco</legend>
-        <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Avatar">
+        <legend className="rotulo mb-2">Escolha seu bicho</legend>
+        <div className="grid grid-cols-4 gap-2 sm:grid-cols-6" role="radiogroup" aria-label="Avatar">
           {AVATARES.map((a, i) => (
             <button
               key={a.nome}
