@@ -6,16 +6,16 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
     />
-    <meta name="description" content="Rabisco: o Stop (adedonha) do caderno, agora online e em tempo real." />
-    <meta name="theme-color" content="#fdfbf3" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#24332c" media="(prefers-color-scheme: dark)" />
+    <meta name="description" content="Stopou! A adedonha online, em tempo real: sorteia a letra, todo mundo escreve e quem terminar primeiro grita STOP." />
+    <meta name="theme-color" content="#15309e" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0b1030" media="(prefers-color-scheme: dark)" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <title>Rabisco · Stop online</title>
+    <title>Stopou! · Adedonha online</title>
     <script>
       // Aplica o tema antes de desenhar a página, para não piscar.
       try {
-        var t = localStorage.getItem('rabisco:tema');
+        var t = localStorage.getItem('stopou:tema');
         if (t !== 'claro' && t !== 'escuro') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'escuro' : 'claro';
         document.documentElement.dataset.tema = t;
       } catch (e) {

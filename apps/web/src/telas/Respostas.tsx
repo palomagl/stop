@@ -4,6 +4,7 @@ import { DICAS_CATEGORIA, MAX_RESPOSTA, limparTexto, type EstadoSala } from '@ra
 import { Avatar } from '../componentes/Avatar';
 import { Cronometro } from '../componentes/Cronometro';
 import { Tela } from '../componentes/Tela';
+import { Tic } from '../componentes/Tic';
 import { acoes } from '../lib/jogo';
 import { useTempoRestante } from '../lib/relogio';
 import { sons } from '../lib/sons';
@@ -83,11 +84,11 @@ export function Respostas({ sala }: { sala: EstadoSala }) {
         type="button"
         onClick={parar}
         disabled={!podeParar}
-        className="adesivo adesivo-stop h-16 flex-1 text-3xl tracking-wider"
+        className="botao botao-coral h-[4.25rem] flex-1 text-4xl tracking-wider"
       >
         STOP!
       </button>
-      <p className="w-24 text-sm font-bold leading-tight text-tinta-suave" aria-live="polite">
+      <p className="w-24 text-sm font-extrabold leading-tight text-texto-suave" aria-live="polite">
         {!participando
           ? 'Você entra na próxima rodada.'
           : fechado || travando
@@ -101,56 +102,54 @@ export function Respostas({ sala }: { sala: EstadoSala }) {
 
   return (
     <>
-      <div className="sticky top-14 z-20 border-b-2 border-tinta/15 bg-papel/95 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 py-2 pl-9 pr-4 sm:pl-20 sm:pr-8">
-          <div className="flex items-center gap-3">
-            <span
-              className="grid size-14 -rotate-6 place-items-center rounded-full border-[3px] border-tinta bg-marca-texto font-mao text-5xl font-bold leading-none text-[#1f2a44]"
-              aria-label={`Letra ${letra}`}
-            >
-              {letra}
+      <div className="sticky top-14 z-20 border-b-2 border-white/10 bg-[var(--vidro)] backdrop-blur-md">
+        <div className="mx-auto flex max-w-xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
+          <span
+            className="grid size-16 shrink-0 place-items-center rounded-full border-[3px] border-[#0b1638] bg-amarelo font-titulo text-5xl leading-none text-[#0b1638] shadow-[0_4px_0_#0b1638]"
+            aria-label={`Letra ${letra}`}
+          >
+            {letra}
+          </span>
+          <div className="flex flex-col items-end">
+            <span className="text-xs font-extrabold uppercase tracking-[0.14em] text-texto-suave">
+              Rodada {sala.rodada} de {sala.config.rodadas}
             </span>
-            <span className="text-sm font-bold text-tinta-suave">
-              Rodada {sala.rodada}/{sala.config.rodadas}
-            </span>
+            {!travando && <Cronometro terminaEm={sala.terminaEm} grande />}
           </div>
-          {!travando && <Cronometro terminaEm={sala.terminaEm} grande />}
         </div>
         <AnimatePresence>{travando && <AvisoStop sala={sala} restante={restante} />}</AnimatePresence>
       </div>
 
       <Tela rodape={rodape}>
         {outros.length > 0 && (
-          <ul className="mb-4 flex flex-wrap gap-3" aria-label="Progresso dos outros jogadores">
+          <ul className="mb-3 flex flex-wrap gap-2" aria-label="Progresso dos outros jogadores">
             {outros.map((j) => (
-              <li key={j.id} className="flex items-center gap-1 text-sm font-bold text-tinta-suave">
-                <Avatar id={j.avatar} tamanho={26} className={j.online ? '' : 'opacity-40'} />
-                <span className="sr-only">{j.apelido}:</span>
+              <li key={j.id} className="chip py-0.5 pl-0.5">
+                <Avatar id={j.avatar} tamanho={26} className={`rounded-full ${j.online ? '' : 'opacity-40'}`} />
+                <span className="max-w-24 truncate">{j.apelido}</span>
                 {j.preenchidas}/{categorias.length}
               </li>
             ))}
           </ul>
         )}
 
-        <form className="flex flex-col gap-5" onSubmit={(e) => e.preventDefault()} autoComplete="off">
+        <form className="flex flex-col gap-3" onSubmit={(e) => e.preventDefault()} autoComplete="off">
           {categorias.map((categoria, i) => {
             const id = `resposta-${i}`;
             return (
-              <div key={categoria} className="flex flex-col">
-                <label htmlFor={id} className="rotulo flex items-baseline justify-between gap-2">
-                  <span>
-                    {categoria}
-                    {Object.hasOwn(DICAS_CATEGORIA, categoria) && (
-                      <span className="font-semibold text-tinta-suave"> · {DICAS_CATEGORIA[categoria]}</span>
-                    )}
-                  </span>
+              <div key={categoria} className="cartao flex flex-col px-4 pt-2 pb-2.5">
+                <label htmlFor={id} className="rotulo">
+                  {categoria}
+                  {Object.hasOwn(DICAS_CATEGORIA, categoria) && (
+                    <span className="normal-case tracking-normal"> · {DICAS_CATEGORIA[categoria]}</span>
+                  )}
                 </label>
                 <input
                   id={id}
                   ref={(el) => {
                     campos.current[i] = el;
                   }}
-                  className="linha-escrita"
+                  className="campo"
                   value={respostas[categoria] ?? ''}
                   onChange={(e) => mudar(categoria, e.target.value)}
                   onBlur={() => pendentes.current.has(categoria) && enviar(categoria)}
@@ -190,13 +189,14 @@ function AvisoStop({ sala, restante }: { sala: EstadoSala; restante: number }) {
       initial={{ height: 0, opacity: 0 }}
       animate={{ height: 'auto', opacity: 1 }}
       exit={{ height: 0, opacity: 0 }}
-      className="overflow-hidden bg-stop text-stop-texto"
+      className="overflow-hidden border-t-[3px] border-[#0b1638] bg-coral text-white"
       role="alert"
     >
-      <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 py-2 pl-9 pr-4 sm:pl-20 sm:pr-8">
-        <p className="font-black leading-tight">
-          <span className="block text-2xl tracking-wide">STOP!</span>
-          <span className="text-sm font-bold">
+      <div className="mx-auto flex max-w-xl items-center gap-3 px-4 py-2 sm:px-6">
+        <Tic tamanho={52} />
+        <p className="flex-1 leading-tight">
+          <span className="titulo block text-3xl">STOP!</span>
+          <span className="text-sm font-extrabold">
             {quem?.id === sala.meuId ? 'Você parou a rodada.' : `${quem?.apelido ?? 'Alguém'} parou. Termine a palavra!`}
           </span>
         </p>
@@ -204,7 +204,7 @@ function AvisoStop({ sala, restante }: { sala: EstadoSala; restante: number }) {
           key={numero}
           initial={{ scale: 1.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="font-mao text-6xl font-bold leading-none"
+          className="titulo text-6xl"
           aria-hidden="true"
         >
           {numero}

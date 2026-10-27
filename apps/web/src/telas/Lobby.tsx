@@ -33,10 +33,10 @@ export function Lobby({ sala }: { sala: EstadoSala }) {
 
   const rodape = souDono ? (
     <div className="flex flex-col gap-1">
-      <button type="button" className="adesivo adesivo-amarelo w-full text-xl" disabled={!podeComecar} onClick={acoes.iniciar}>
+      <button type="button" className="botao botao-amarelo w-full text-2xl" disabled={!podeComecar} onClick={acoes.iniciar}>
         Começar partida
       </button>
-      <p className="text-center text-sm font-semibold text-tinta-suave" aria-live="polite">
+      <p className="text-center text-sm font-bold text-texto-suave" aria-live="polite">
         {online.length < MIN_JOGADORES
           ? 'Mande o código para mais alguém entrar.'
           : faltamProntos.length > 0
@@ -47,7 +47,7 @@ export function Lobby({ sala }: { sala: EstadoSala }) {
   ) : (
     <button
       type="button"
-      className={`adesivo w-full text-xl ${eu.pronto ? 'adesivo-azul' : 'adesivo-amarelo'}`}
+      className={`botao w-full text-2xl ${eu.pronto ? 'botao-menta' : 'botao-amarelo'}`}
       aria-pressed={eu.pronto}
       onClick={() => acoes.pronto(!eu.pronto)}
     >
@@ -60,21 +60,21 @@ export function Lobby({ sala }: { sala: EstadoSala }) {
       <Convite codigo={sala.codigo} />
 
       <section className="mt-8" aria-labelledby="titulo-jogadores">
-        <h2 id="titulo-jogadores" className="mb-3 font-mao text-3xl font-bold">
+        <h2 id="titulo-jogadores" className="titulo mb-3 text-3xl">
           Quem está na sala ({sala.jogadores.length}/10)
         </h2>
         <ListaJogadores jogadores={sala.jogadores} meuId={sala.meuId} aoRemover={souDono ? remover : undefined} />
       </section>
 
       <section className="mt-8" aria-labelledby="titulo-config">
-        <h2 id="titulo-config" className="mb-3 font-mao text-3xl font-bold">
+        <h2 id="titulo-config" className="titulo mb-3 text-3xl">
           Regras da partida
         </h2>
         {souDono ? <EditorConfig config={sala.config} /> : <ResumoConfig config={sala.config} />}
       </section>
 
       <div className="mt-8 text-center">
-        <button type="button" className="py-2 font-bold text-tinta-suave underline" onClick={acoes.sair}>
+        <button type="button" className="chip px-4 py-2 hover:bg-white/20" onClick={acoes.sair}>
           Sair da sala
         </button>
       </div>
@@ -92,7 +92,7 @@ function Convite({ codigo }: { codigo: string }) {
     // A biblioteca de QR só é baixada quando alguém abre o QR code.
     import('qrcode')
       .then(({ default: QRCode }) =>
-        QRCode.toString(link, { type: 'svg', margin: 1, color: { dark: '#1f2a44', light: '#ffffff' } }),
+        QRCode.toString(link, { type: 'svg', margin: 1, color: { dark: '#0b1638', light: '#ffffff' } }),
       )
       .then(setQr)
       .catch(() => setQr(null));
@@ -116,29 +116,29 @@ function Convite({ codigo }: { codigo: string }) {
   }
 
   return (
-    <section className="cartao relative -rotate-1 p-5 text-center" aria-labelledby="titulo-codigo">
-      <h2 id="titulo-codigo" className="font-bold text-tinta-suave">
+    <section className="cartao relative p-5 text-center" aria-labelledby="titulo-codigo">
+      <h2 id="titulo-codigo" className="rotulo">
         Código da sala
       </h2>
-      <p className="my-2 font-mono text-5xl font-black tracking-[0.25em] sm:text-6xl" aria-label={codigo.split('').join(' ')}>
+      <p className="my-1 font-titulo text-6xl tracking-[0.2em] text-tinta sm:text-7xl" aria-label={codigo.split('').join(' ')}>
         {codigo}
       </p>
       <div className="mt-3 flex flex-wrap justify-center gap-2">
-        <button type="button" className="adesivo text-base" onClick={copiar}>
+        <button type="button" className="botao botao-pequeno" onClick={copiar}>
           Copiar link
         </button>
         {'share' in navigator && (
-          <button type="button" className="adesivo text-base" onClick={compartilhar}>
+          <button type="button" className="botao botao-pequeno botao-amarelo" onClick={compartilhar}>
             Compartilhar
           </button>
         )}
-        <button type="button" className="adesivo text-base" aria-expanded={mostrarQr} onClick={() => setMostrarQr((m) => !m)}>
+        <button type="button" className="botao botao-pequeno" aria-expanded={mostrarQr} onClick={() => setMostrarQr((m) => !m)}>
           QR code
         </button>
       </div>
       {mostrarQr && qr && (
         <div
-          className="mx-auto mt-4 w-48 rounded-lg border-2 border-tinta bg-white p-2"
+          className="mx-auto mt-4 w-48 rounded-xl border-[3px] border-[#0b1638] bg-white p-2"
           role="img"
           aria-label={`QR code para entrar na sala ${codigo}`}
           // SVG gerado pela biblioteca a partir do nosso próprio link.
@@ -163,7 +163,7 @@ function ResumoConfig({ config }: { config: Config }) {
         <strong>Categorias ({config.categorias.length}):</strong>
         <ul className="mt-2 flex flex-wrap gap-2">
           {config.categorias.map((c) => (
-            <li key={c} className="rounded-full border-2 border-tinta/30 px-3 py-1 font-mao text-xl">
+            <li key={c} className="rounded-full bg-cartao-2 px-3 py-1 font-bold">
               {c}
             </li>
           ))}
@@ -241,7 +241,7 @@ function EditorConfig({ config }: { config: Config }) {
         <input
           type="checkbox"
           role="switch"
-          className="size-7 shrink-0 accent-[var(--caneta)]"
+          className="size-7 shrink-0 accent-[var(--coral)]"
           checked={config.publica}
           onChange={(e) => salvar({ ...config, publica: e.target.checked })}
         />
@@ -252,7 +252,7 @@ function EditorConfig({ config }: { config: Config }) {
           <h3 className="rotulo mb-2">Minhas listas</h3>
           <ul className="flex flex-wrap gap-2">
             {listas.map((l) => (
-              <li key={l.nome} className="flex items-center rounded-full border-2 border-tinta/30">
+              <li key={l.nome} className="flex items-center rounded-full border-2 border-tinta-suave/40 bg-cartao-2">
                 <button
                   type="button"
                   className="py-1.5 pl-3 pr-2 text-left font-bold"
@@ -286,14 +286,16 @@ function EditorConfig({ config }: { config: Config }) {
                 type="button"
                 aria-pressed={marcada}
                 onClick={() => alternarCategoria(c)}
-                className={`rounded-full border-2 px-3 py-1.5 text-left font-mao text-xl leading-tight transition ${
-                  marcada ? 'border-caneta bg-marca-texto/50 text-tinta' : 'border-dashed border-tinta/30 text-tinta-suave line-through'
+                className={`rounded-full border-2 px-3 py-1.5 text-left font-extrabold leading-tight transition active:scale-95 ${
+                  marcada
+                    ? 'border-[#0b1638] bg-amarelo text-[#0b1638] shadow-[0_3px_0_#0b1638]'
+                    : 'border-dashed border-tinta-suave/50 text-tinta-suave line-through'
                 }`}
               >
                 <span aria-hidden="true">{marcada ? '✓ ' : ''}</span>
                 {c}
                 {Object.hasOwn(DICAS_CATEGORIA, c) && (
-                  <span className="block font-sans text-xs no-underline">{DICAS_CATEGORIA[c]}</span>
+                  <span className="block text-xs font-semibold no-underline opacity-80">{DICAS_CATEGORIA[c]}</span>
                 )}
               </button>
             );
@@ -303,14 +305,14 @@ function EditorConfig({ config }: { config: Config }) {
           <label className="flex flex-1 flex-col">
             <span className="text-sm font-bold">Nova categoria</span>
             <input
-              className="linha-escrita text-2xl"
+              className="campo text-xl"
               value={novaCategoria}
               onChange={(e) => setNovaCategoria(e.target.value)}
               maxLength={MAX_CATEGORIA}
               placeholder="Ex.: Time de futebol"
             />
           </label>
-          <button type="submit" className="adesivo text-base" disabled={!novaCategoria.trim()}>
+          <button type="submit" className="botao botao-pequeno" disabled={!novaCategoria.trim()}>
             Adicionar
           </button>
         </form>
@@ -318,7 +320,7 @@ function EditorConfig({ config }: { config: Config }) {
           <label className="flex flex-1 flex-col">
             <span className="text-sm font-bold">Salvar estas categorias como lista</span>
             <input
-              className="linha-escrita text-2xl"
+              className="campo text-xl"
               value={nomeLista}
               onChange={(e) => setNomeLista(e.target.value)}
               maxLength={24}
@@ -327,7 +329,7 @@ function EditorConfig({ config }: { config: Config }) {
           </label>
           <button
             type="submit"
-            className="adesivo text-base"
+            className="botao botao-pequeno"
             disabled={!nomeLista.trim() || (listas.length >= MAX_LISTAS && !listas.some((l) => l.nome === nomeLista.trim()))}
           >
             Salvar
@@ -341,19 +343,19 @@ function EditorConfig({ config }: { config: Config }) {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              className="adesivo size-12 p-0 text-2xl"
+              className="botao botao-pequeno size-12 p-0 text-2xl"
               aria-label="Menos uma rodada"
               disabled={config.rodadas <= MIN_RODADAS}
               onClick={() => salvar({ ...config, rodadas: config.rodadas - 1 })}
             >
               −
             </button>
-            <output className="w-10 text-center text-3xl font-black tabular-nums" aria-live="polite">
+            <output className="w-10 text-center font-titulo text-4xl tabular-nums" aria-live="polite">
               {config.rodadas}
             </output>
             <button
               type="button"
-              className="adesivo size-12 p-0 text-2xl"
+              className="botao botao-pequeno size-12 p-0 text-2xl"
               aria-label="Mais uma rodada"
               disabled={config.rodadas >= MAX_RODADAS}
               onClick={() => salvar({ ...config, rodadas: config.rodadas + 1 })}
@@ -372,8 +374,10 @@ function EditorConfig({ config }: { config: Config }) {
                 type="button"
                 aria-pressed={config.tempoRodadaSeg === t}
                 onClick={() => salvar({ ...config, tempoRodadaSeg: t })}
-                className={`min-w-14 rounded-lg border-2 px-2 py-2 font-bold ${
-                  config.tempoRodadaSeg === t ? 'border-caneta bg-marca-texto/50' : 'border-tinta/25'
+                className={`min-w-14 rounded-xl border-2 px-2 py-2 font-extrabold transition active:scale-95 ${
+                  config.tempoRodadaSeg === t
+                    ? 'border-[#0b1638] bg-amarelo text-[#0b1638] shadow-[0_3px_0_#0b1638]'
+                    : 'border-tinta-suave/40'
                 }`}
               >
                 {t < 60 ? `${t}s` : `${Math.floor(t / 60)}${t % 60 ? `:${String(t % 60).padStart(2, '0')}` : ''} min`}
@@ -385,7 +389,7 @@ function EditorConfig({ config }: { config: Config }) {
 
       <fieldset>
         <legend className="rotulo mb-1">Letras fora do sorteio</legend>
-        <p className="mb-2 text-sm text-tinta-suave">Letras riscadas não são sorteadas.</p>
+        <p className="mb-2 text-sm font-semibold text-tinta-suave">Letras riscadas não são sorteadas.</p>
         <div className="grid grid-cols-7 gap-1.5 sm:grid-cols-13">
           {ALFABETO.map((l) => {
             const fora = config.letrasExcluidas.includes(l);
@@ -396,8 +400,8 @@ function EditorConfig({ config }: { config: Config }) {
                 aria-pressed={fora}
                 aria-label={`${l}: ${fora ? 'fora do sorteio' : 'no sorteio'}`}
                 onClick={() => alternarLetra(l)}
-                className={`relative grid aspect-square place-items-center rounded-lg border-2 font-mao text-2xl font-bold ${
-                  fora ? 'border-errado text-errado' : 'border-tinta/25'
+                className={`relative grid aspect-square place-items-center rounded-xl border-2 font-titulo text-xl transition active:scale-95 ${
+                  fora ? 'border-errado bg-errado/10 text-errado' : 'border-tinta-suave/40'
                 }`}
               >
                 {l}

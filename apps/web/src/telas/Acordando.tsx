@@ -1,31 +1,31 @@
 import { motion, useReducedMotion } from 'framer-motion';
-import { IconeLogo } from '../componentes/Logo';
+import { Tic } from '../componentes/Tic';
 
 /**
  * O servidor grátis dorme quando fica parado e leva até um minuto para ligar.
- * Esta tela segura a pessoa enquanto isso.
+ * Esta tela segura a pessoa enquanto isso, com o Tic tirando um cochilo.
  */
 export function Acordando() {
   const reduzir = useReducedMotion();
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-6 px-8 text-center" role="status" aria-live="polite">
       <motion.div
-        animate={reduzir ? undefined : { rotate: [-8, 8, -8], y: [0, -6, 0] }}
-        transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+        animate={reduzir ? undefined : { rotate: [-4, 4, -4], y: [0, -8, 0] }}
+        transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
       >
-        <IconeLogo tamanho={96} />
+        <Tic tamanho={150} humor="dormindo" />
       </motion.div>
-      <h1 className="font-mao text-5xl font-bold">Acordando o servidor…</h1>
-      <p className="max-w-sm text-tinta-suave">
-        Ele tira uma soneca quando ninguém está jogando. A primeira entrada do dia pode levar até um minuto.
+      <h1 className="titulo text-4xl">Acordando o servidor…</h1>
+      <p className="max-w-sm font-semibold text-texto-suave">
+        O Tic tira um cochilo quando ninguém está jogando. A primeira entrada depois disso pode levar até um minuto.
       </p>
       <div className="flex gap-2" aria-hidden="true">
         {[0, 1, 2].map((i) => (
           <motion.span
             key={i}
-            className="size-3 rounded-full bg-caneta"
-            animate={reduzir ? undefined : { opacity: [0.2, 1, 0.2] }}
-            transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
+            className="size-3.5 rounded-full border-2 border-[#0b1638] bg-amarelo"
+            animate={reduzir ? undefined : { y: [0, -10, 0] }}
+            transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.15 }}
           />
         ))}
       </div>

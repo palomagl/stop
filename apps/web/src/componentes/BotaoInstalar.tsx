@@ -32,7 +32,7 @@ export function BotaoInstalar() {
     return (
       <button
         type="button"
-        className="py-2 font-bold text-caneta underline decoration-2 underline-offset-4"
+        className="chip mx-auto px-4 py-2 hover:bg-white/20"
         onClick={async () => {
           await evento.prompt();
           await evento.userChoice;
@@ -46,7 +46,7 @@ export function BotaoInstalar() {
 
   if (ehIphone()) {
     return (
-      <p className="text-center text-sm text-tinta-suave">
+      <p className="text-center text-sm font-semibold text-texto-suave">
         📲 Para instalar: toque em <strong>Compartilhar</strong> e depois em <strong>Adicionar à Tela de Início</strong>.
       </p>
     );

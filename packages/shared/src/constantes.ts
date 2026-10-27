@@ -1,7 +1,7 @@
 import type { Config } from './tipos';
 
 /** Nome provisório do jogo. Trocar aqui troca em todo lugar. */
-export const NOME_DO_JOGO = 'Rabisco';
+export const NOME_DO_JOGO = 'Stopou!';
 
 export const MIN_JOGADORES = 2;
 export const MAX_JOGADORES = 10;

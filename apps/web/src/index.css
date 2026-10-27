@@ -1,191 +1,260 @@
 @import 'tailwindcss';
-@import '@fontsource/caveat/500.css';
-@import '@fontsource/caveat/700.css';
-@import '@fontsource-variable/nunito';
+@import '@fontsource/lilita-one/latin-400.css';
+@import '@fontsource-variable/baloo-2';
 
 @custom-variant dark (&:where([data-tema='escuro'], [data-tema='escuro'] *));
 
-/* ── Cores: folha de caderno (claro) e quadro-negro (escuro) ─────────────
-   Certo é azul de caneta e errado é vermelho-alaranjado: o par continua
-   distinguível para quem não diferencia vermelho de verde. */
+/* ── Cores do Stopou! ───────────────────────────────────────────────────
+   Tema "dia" (claro): azul elétrico com raios. Tema "noite" (escuro): azul
+   quase preto. Cartões ficam por cima do fundo, com contorno e sombra dura.
+   Certo é azul e errado é vermelho, sempre com ícone e texto junto, para não
+   depender da cor (funciona para quem não distingue vermelho de verde). */
 :root {
-  --papel: #fdfbf3;
-  --papel-2: #f4efdd;
-  --pauta: #c4d9ef;
-  --margem: #f0a3a3;
-  --tinta: #1f2a44;
-  --tinta-suave: #5d6780;
-  --caneta: #2357c9;
-  --certo: #2357c9;
-  --errado: #d2452c;
-  --marca-texto: #ffd84d;
-  --adesivo: #ffffff;
-  --sombra: #1f2a44;
-  --stop: #e2492f;
-  --stop-texto: #ffffff;
-  color-scheme: light;
-}
-
-[data-tema='escuro'] {
-  --papel: #24332c;
-  --papel-2: #2d3e35;
-  --pauta: rgb(255 255 255 / 0.07);
-  --margem: rgb(255 150 150 / 0.22);
-  --tinta: #f3f0e4;
-  --tinta-suave: #b9c4bb;
-  --caneta: #9cc5ff;
-  --certo: #9cc5ff;
-  --errado: #ff9a7f;
-  --marca-texto: #ffe27a;
-  --adesivo: #31453b;
-  --sombra: #101915;
-  --stop: #ff7a5f;
-  --stop-texto: #1b120f;
+  --fundo-a: #2b57ec;
+  --fundo-b: #1736b0;
+  --fundo-c: #0c1d68;
+  --raio: rgb(255 255 255 / 0.07);
+  --texto: #ffffff;
+  --texto-suave: #c9d4ff;
+  --cartao: #fffaf0;
+  --cartao-2: #f2ead6;
+  --tinta: #0b1638;
+  --tinta-suave: #56648f;
+  --contorno: #0b1638;
+  --amarelo: #ffd23f;
+  --coral: #ff4d3d;
+  --menta: #33d69f;
+  --certo: #1d6cf2;
+  --errado: #e0322b;
+  --tile: #0f2580;
+  --vidro: rgb(9 20 70 / 0.55);
   color-scheme: dark;
 }
 
+[data-tema='escuro'] {
+  --fundo-a: #1c2766;
+  --fundo-b: #101845;
+  --fundo-c: #070b25;
+  --raio: rgb(255 255 255 / 0.035);
+  --texto-suave: #a9b6e6;
+  --cartao: #18214f;
+  --cartao-2: #222d66;
+  --tinta: #f2f5ff;
+  --tinta-suave: #a3b0dd;
+  --contorno: #03061a;
+  --certo: #78a9ff;
+  --errado: #ff6b5e;
+  --tile: #0b1238;
+  --vidro: rgb(5 9 32 / 0.7);
+}
+
 @theme inline {
-  --color-papel: var(--papel);
-  --color-papel-2: var(--papel-2);
+  --color-texto: var(--texto);
+  --color-texto-suave: var(--texto-suave);
+  --color-cartao: var(--cartao);
+  --color-cartao-2: var(--cartao-2);
   --color-tinta: var(--tinta);
   --color-tinta-suave: var(--tinta-suave);
-  --color-caneta: var(--caneta);
+  --color-contorno: var(--contorno);
+  --color-amarelo: var(--amarelo);
+  --color-coral: var(--coral);
+  --color-menta: var(--menta);
   --color-certo: var(--certo);
   --color-errado: var(--errado);
-  --color-marca-texto: var(--marca-texto);
-  --color-adesivo: var(--adesivo);
-  --color-stop: var(--stop);
-  --color-stop-texto: var(--stop-texto);
-  --font-mao: 'Caveat', 'Comic Sans MS', cursive;
-  --font-sans: 'Nunito Variable', ui-rounded, system-ui, sans-serif;
+  --color-tile: var(--tile);
+  --font-titulo: 'Lilita One', 'Arial Rounded MT Bold', system-ui, sans-serif;
+  --font-sans: 'Baloo 2 Variable', 'Baloo 2', ui-rounded, system-ui, sans-serif;
 }
 
 /* ── Página ──────────────────────────────────────────────────────────── */
 html {
   -webkit-text-size-adjust: 100%;
-  background-color: var(--papel);
+  background-color: var(--fundo-c);
 }
 
 body {
   margin: 0;
   min-height: 100dvh;
   font-family: var(--font-sans);
-  color: var(--tinta);
-  background-color: var(--papel);
-  /* Margem vermelha + linhas da pauta */
+  font-weight: 500;
+  color: var(--texto);
+  background-color: var(--fundo-c);
+  /* Raios saindo do topo, como uma explosão de desenho animado */
   background-image:
-    linear-gradient(90deg, transparent 22px, var(--margem) 22px, var(--margem) 24px, transparent 24px),
-    repeating-linear-gradient(to bottom, transparent 0, transparent 35px, var(--pauta) 35px, var(--pauta) 36px);
-  background-attachment: local;
+    repeating-conic-gradient(from 0deg at 50% 0%, var(--raio) 0deg 6deg, transparent 6deg 14deg),
+    radial-gradient(ellipse 130% 85% at 50% 0%, var(--fundo-a) 0%, var(--fundo-b) 45%, var(--fundo-c) 100%);
+  background-attachment: fixed;
   -webkit-tap-highlight-color: transparent;
 }
 
-@media (min-width: 640px) {
-  body {
-    background-image:
-      linear-gradient(90deg, transparent 56px, var(--margem) 56px, var(--margem) 58px, transparent 58px),
-      repeating-linear-gradient(to bottom, transparent 0, transparent 35px, var(--pauta) 35px, var(--pauta) 36px);
-  }
-}
-
-[data-tema='escuro'] body {
-  /* Giz apagado no quadro */
-  background-image:
-    radial-gradient(ellipse at 20% 10%, rgb(255 255 255 / 0.05), transparent 45%),
-    radial-gradient(ellipse at 80% 70%, rgb(255 255 255 / 0.04), transparent 50%),
-    linear-gradient(90deg, transparent 22px, var(--margem) 22px, var(--margem) 24px, transparent 24px),
-    repeating-linear-gradient(to bottom, transparent 0, transparent 35px, var(--pauta) 35px, var(--pauta) 36px);
-}
-
 :focus-visible {
-  outline: 3px dashed var(--caneta);
+  outline: 3px solid var(--amarelo);
   outline-offset: 3px;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 ::selection {
-  background: var(--marca-texto);
-  color: #1f2a44;
+  background: var(--amarelo);
+  color: #0b1638;
 }
 
 @layer components {
-  /* Botão que parece adesivo colado na folha */
-  .adesivo {
+  /* Botão grosso de jogo: contorno, sombra dura embaixo e afunda quando aperta. */
+  .botao {
     display: inline-flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    min-height: 3rem;
-    padding: 0.6rem 1.25rem;
-    border: 2.5px solid var(--tinta);
-    border-radius: 14px;
-    background: var(--adesivo);
-    color: var(--tinta);
-    font-weight: 800;
-    font-size: 1.05rem;
-    box-shadow: 3px 3px 0 var(--sombra);
+    gap: 0.05rem;
+    min-height: 3.5rem;
+    padding: 0.5rem 1.25rem;
+    border: 3px solid var(--contorno);
+    border-radius: 18px;
+    background: #ffffff;
+    color: #0b1638;
+    font-family: var(--font-titulo);
+    font-size: 1.3rem;
+    line-height: 1.05;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    box-shadow: 0 6px 0 var(--contorno);
     transition:
       transform 0.08s ease,
-      box-shadow 0.08s ease;
+      box-shadow 0.08s ease,
+      filter 0.15s ease;
     touch-action: manipulation;
     user-select: none;
   }
-  .adesivo:active:not(:disabled) {
-    transform: translate(2px, 2px);
-    box-shadow: 1px 1px 0 var(--sombra);
+  .botao:hover:not(:disabled) {
+    filter: brightness(1.05);
   }
-  .adesivo:disabled {
-    opacity: 0.45;
+  .botao:active:not(:disabled) {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 var(--contorno);
+  }
+  .botao:disabled {
+    opacity: 0.5;
+    filter: saturate(0.5);
     cursor: not-allowed;
-    box-shadow: none;
   }
-  .adesivo-amarelo {
-    background: var(--marca-texto);
-    color: #1f2a44;
+  .botao small {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    opacity: 0.9;
   }
-  .adesivo-stop {
-    background: var(--stop);
-    color: var(--stop-texto);
+  .botao-amarelo {
+    background: var(--amarelo);
+    color: #0b1638;
   }
-  .adesivo-azul {
-    background: var(--caneta);
-    color: var(--papel);
+  .botao-coral {
+    background: var(--coral);
+    color: #ffffff;
+  }
+  .botao-menta {
+    background: var(--menta);
+    color: #0b1638;
+  }
+  .botao-pequeno {
+    min-height: 2.75rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 14px;
+    font-size: 1rem;
+    box-shadow: 0 4px 0 var(--contorno);
+  }
+  .botao-pequeno:active:not(:disabled) {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 var(--contorno);
   }
 
-  /* Pedaço de papel destacado (cartões) */
+  /* Cartão por cima do fundo azul */
   .cartao {
-    background: var(--papel);
-    border: 2px solid var(--tinta);
-    border-radius: 16px;
-    box-shadow: 4px 4px 0 var(--sombra);
+    background: var(--cartao);
+    color: var(--tinta);
+    border: 3px solid var(--contorno);
+    border-radius: 20px;
+    box-shadow: 0 5px 0 var(--contorno);
   }
 
-  /* Campo escrito à mão sobre a linha */
-  .linha-escrita {
+  /* Faixa translúcida para listas e avisos direto no fundo */
+  .vidro {
+    background: rgb(255 255 255 / 0.1);
+    border: 2px solid rgb(255 255 255 / 0.16);
+    border-radius: 18px;
+  }
+
+  /* Título grande com sombra dura, como o logo */
+  .titulo {
+    font-family: var(--font-titulo);
+    color: #ffffff;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    text-shadow: 0 4px 0 var(--contorno);
+  }
+
+  /* Rótulo pequeno em caixa alta dentro dos cartões */
+  .rotulo {
+    display: block;
+    font-weight: 800;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--tinta-suave);
+  }
+
+  /* Campo de texto dentro do cartão */
+  .campo {
     width: 100%;
     border: 0;
-    border-bottom: 2.5px solid var(--tinta-suave);
+    border-bottom: 2.5px dashed color-mix(in srgb, var(--tinta-suave) 70%, transparent);
     background: transparent;
-    font-family: var(--font-mao);
-    font-size: 1.9rem;
-    line-height: 1.2;
-    color: var(--caneta);
-    padding: 0.1rem 0.25rem;
+    font-family: var(--font-sans);
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--tinta);
+    padding: 0.1rem 0.1rem 0.05rem;
     border-radius: 0;
   }
-  .linha-escrita:focus {
+  .campo:focus {
     outline: none;
-    border-bottom-color: var(--caneta);
-    background: color-mix(in srgb, var(--marca-texto) 22%, transparent);
+    border-bottom: 3px solid var(--coral);
   }
-  .linha-escrita::placeholder {
+  .campo::placeholder {
     color: var(--tinta-suave);
-    opacity: 0.45;
+    opacity: 0.55;
+  }
+  .campo:disabled {
+    opacity: 0.6;
   }
 
-  .rotulo {
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.7rem;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.14);
+    color: var(--texto);
     font-weight: 800;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
+  }
+
+  /* Carimbo de correção */
+  .selo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.1rem 0.5rem;
+    border: 3px solid currentColor;
+    border-radius: 10px;
+    font-family: var(--font-titulo);
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: color-mix(in srgb, currentColor 10%, var(--cartao));
   }
 }
 
@@ -201,14 +270,6 @@ body {
 
 .pulsando {
   animation: pulsar 1s ease-in-out infinite;
-}
-
-.sr-only-focavel:not(:focus) {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
 }
 
 /* Quem desativou animações no sistema não vê nada se mexendo. */
