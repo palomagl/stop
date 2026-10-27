@@ -43,7 +43,7 @@ export interface Jogador {
   timerFora: ReturnType<typeof setTimeout> | null;
 }
 
-export type MotivoSaida = 'saiu' | 'removido' | 'tempo';
+export type MotivoSaida = 'saiu' | 'removido' | 'tempo' | 'denuncias';
 
 interface EventosSala {
   mudou: [];
@@ -76,6 +76,11 @@ export interface OpcoesSala {
 
 const INTERVALO_REACAO_MS = 400;
 
+/** Maioria das outras pessoas da sala, e nunca menos de duas. */
+export function denunciasNecessarias(pessoasNaSala: number): number {
+  return Math.max(2, Math.ceil((pessoasNaSala - 1) / 2));
+}
+
 /**
  * Uma sala e a máquina de estados da partida.
  * Os métodos devolvem uma mensagem quando a ação faz sentido para a pessoa saber
@@ -103,6 +108,8 @@ export class Sala extends EventEmitter<EventosSala> {
   private historico: RegistroResposta[] = [];
   private rodadasCompletas = 0;
   private ultimaReacao = new Map<string, number>();
+  /** Quem denunciou cada pessoa (id denunciado → ids de quem denunciou). */
+  private denuncias = new Map<string, Set<string>>();
 
   constructor(
     codigo: string,
@@ -182,6 +189,27 @@ export class Sala extends EventEmitter<EventosSala> {
     if (alvoId === quemPede) return null;
     if (!this.jogadores.has(alvoId)) return null;
     this.tirar(alvoId, 'removido');
+    return null;
+  }
+
+  /**
+   * Denúncia de apelido, só em sala pública (nas particulares, quem é dono já pode remover).
+   * Quem recebe denúncia da maioria das outras pessoas da sala, e de pelo menos duas, sai.
+   */
+  denunciar(quemDenuncia: string, alvoId: string): string | null {
+    if (!this.config.publica) return 'Denúncias valem só em salas públicas.';
+    if (quemDenuncia === alvoId || !this.jogadores.has(quemDenuncia)) return null;
+    const alvo = this.jogadores.get(alvoId);
+    if (!alvo) return null;
+
+    const quem = this.denuncias.get(alvoId) ?? new Set<string>();
+    quem.add(quemDenuncia);
+    this.denuncias.set(alvoId, quem);
+
+    const necessarias = denunciasNecessarias(this.jogadores.size);
+    console.warn(`Denúncia na sala ${this.codigo}: "${alvo.apelido}" (${quem.size} de ${necessarias})`);
+    if (quem.size >= necessarias) this.tirar(alvoId, 'denuncias');
+    else this.emit('mudou');
     return null;
   }
 
@@ -324,6 +352,7 @@ export class Sala extends EventEmitter<EventosSala> {
       pontos: j.pontos,
       preenchidas: this.config.categorias.filter((c) => limparTexto(j.respostas.get(c) ?? '')).length,
       participando: j.participando,
+      denunciadoPorMim: this.denuncias.get(j.id)?.has(jogadorId) ?? false,
     }));
 
     const correcao = this.fase === 'correcao' && this.correcao ? this.correcao : null;
@@ -599,6 +628,8 @@ export class Sala extends EventEmitter<EventosSala> {
     this.limparTimerFora(jogador);
     this.jogadores.delete(jogadorId);
     this.ultimaReacao.delete(jogadorId);
+    this.denuncias.delete(jogadorId);
+    for (const quem of this.denuncias.values()) quem.delete(jogadorId);
     if (this.donoId === jogadorId) this.passarDono();
     this.emit('removido', jogador, motivo);
 

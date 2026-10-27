@@ -12,6 +12,7 @@ import {
 } from '@rabisco/shared';
 import { Avatar } from '../componentes/Avatar';
 import { Carimbo } from '../componentes/Carimbo';
+import { BotaoDenunciar } from '../componentes/ListaJogadores';
 import { Cronometro } from '../componentes/Cronometro';
 import { Tela } from '../componentes/Tela';
 import { acoes } from '../lib/jogo';
@@ -109,6 +110,7 @@ export function Correcao({ sala }: { sala: EstadoSala }) {
       >
         {correcao.respostas.map((r) => {
           const minha = r.jogadorId === sala.meuId;
+          const pessoa = sala.jogadores.find((j) => j.id === r.jogadorId);
           const sim = Object.values(r.votos).filter((v) => v === 'sim').length;
           const nao = Object.values(r.votos).filter((v) => v === 'nao').length;
           const meuVoto = r.votos[sala.meuId];
@@ -132,6 +134,11 @@ export function Correcao({ sala }: { sala: EstadoSala }) {
                   {r.apelido}
                   {minha && <span className="font-semibold"> (você)</span>}
                 </span>
+                {sala.config.publica && !minha && pessoa && (
+                  <span className="-my-2">
+                    <BotaoDenunciar jogador={pessoa} aoDenunciar={acoes.denunciar} />
+                  </span>
+                )}
                 <span aria-live="polite">
                   {anulada ? (
                     <Carimbo key="errado" tipo="errado" texto={r.motivo ? textoMotivo(r.motivo, letra) : 'anulada'} />

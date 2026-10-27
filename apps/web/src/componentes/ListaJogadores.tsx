@@ -7,9 +7,11 @@ interface Props {
   /** Texto do selo de "pronto" (no lobby, na correção, no resultado). */
   rotuloPronto?: string;
   aoRemover?: (jogador: JogadorPublico) => void;
+  /** Só em sala pública: deixa denunciar o apelido de outra pessoa. */
+  aoDenunciar?: (jogador: JogadorPublico) => void;
 }
 
-export function ListaJogadores({ jogadores, meuId, rotuloPronto = 'pronto', aoRemover }: Props) {
+export function ListaJogadores({ jogadores, meuId, rotuloPronto = 'pronto', aoRemover, aoDenunciar }: Props) {
   return (
     <ul className="grid gap-2.5 sm:grid-cols-2" aria-label="Jogadores na sala">
       {jogadores.map((j) => (
@@ -38,6 +40,9 @@ export function ListaJogadores({ jogadores, meuId, rotuloPronto = 'pronto', aoRe
               <span aria-hidden="true">✓</span> {rotuloPronto}
             </span>
           )}
+          {aoDenunciar && !aoRemover && j.id !== meuId && (
+            <BotaoDenunciar jogador={j} aoDenunciar={aoDenunciar} />
+          )}
           {aoRemover && j.id !== meuId && (
             <button
               type="button"
@@ -51,5 +56,27 @@ export function ListaJogadores({ jogadores, meuId, rotuloPronto = 'pronto', aoRe
         </li>
       ))}
     </ul>
+  );
+}
+
+/** Bandeirinha de denúncia. Depois de denunciar, fica marcada e não repete. */
+export function BotaoDenunciar({
+  jogador,
+  aoDenunciar,
+}: {
+  jogador: JogadorPublico;
+  aoDenunciar: (jogador: JogadorPublico) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => aoDenunciar(jogador)}
+      disabled={jogador.denunciadoPorMim}
+      className="grid size-10 shrink-0 place-items-center rounded-full text-lg transition hover:bg-black/5 disabled:opacity-40"
+      aria-label={jogador.denunciadoPorMim ? `Você já denunciou ${jogador.apelido}` : `Denunciar o apelido ${jogador.apelido}`}
+      title={jogador.denunciadoPorMim ? 'Já denunciado' : 'Denunciar apelido'}
+    >
+      <span aria-hidden="true">🚩</span>
+    </button>
   );
 }

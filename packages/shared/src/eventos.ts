@@ -21,6 +21,8 @@ export interface ClienteParaServidor {
   'sala:sair': () => void;
   'sala:configurar': (config: Config) => void;
   'sala:remover': (dados: { jogadorId: string }) => void;
+  /** Denuncia o apelido de alguém numa sala pública. */
+  'jogador:denunciar': (dados: { jogadorId: string }) => void;
   'jogador:pronto': (dados: { pronto: boolean }) => void;
   'partida:iniciar': () => void;
   'partida:jogarDeNovo': (dados: { voltarParaSala: boolean }) => void;
@@ -40,5 +42,6 @@ export interface ServidorParaCliente {
   /** Avulso, só para a animação "STOP! 3, 2, 1". */
   'rodada:stop': (dados: { jogadorId: string; apelido: string }) => void;
   'reacao': (dados: { id: string; jogadorId: string; emoji: Reacao }) => void;
-  'jogador:removido': () => void;
+  /** A pessoa saiu da sala sem pedir: o dono removeu, ficou fora tempo demais ou foi denunciada. */
+  'jogador:removido': (dados: { motivo: 'removido' | 'tempo' | 'denuncias' }) => void;
 }

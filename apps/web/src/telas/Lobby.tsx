@@ -63,7 +63,12 @@ export function Lobby({ sala }: { sala: EstadoSala }) {
         <h2 id="titulo-jogadores" className="titulo mb-3 text-3xl">
           Quem está na sala ({sala.jogadores.length}/10)
         </h2>
-        <ListaJogadores jogadores={sala.jogadores} meuId={sala.meuId} aoRemover={souDono ? remover : undefined} />
+        <ListaJogadores
+          jogadores={sala.jogadores}
+          meuId={sala.meuId}
+          aoRemover={souDono ? remover : undefined}
+          aoDenunciar={sala.config.publica ? acoes.denunciar : undefined}
+        />
       </section>
 
       <section className="mt-8" aria-labelledby="titulo-config">

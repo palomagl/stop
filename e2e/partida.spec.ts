@@ -134,3 +134,29 @@ test('ranking avisa quando o servidor está sem banco', async ({ page }) => {
   await page.getByRole('button', { name: /Ranking/ }).click();
   await expect(page.getByText(/não está guardando partidas/)).toBeVisible();
 });
+
+test('em sala pública, quem é denunciado pela maioria sai da sala', async ({ browser }) => {
+  const nomes = ['Ana', 'Bia', 'Chato'];
+  const paginas: Page[] = [];
+  for (const nome of nomes) {
+    const pagina = await (await browser.newContext()).newPage();
+    pagina.on('dialog', (d) => d.accept());
+    await pagina.goto('/');
+    await pagina.getByRole('button', { name: /Jogar agora/ }).click();
+    await pagina.getByLabel('Seu apelido').fill(nome);
+    await pagina.getByRole('button', { name: 'Procurar sala' }).click();
+    await expect(pagina.getByText('Código da sala', { exact: true })).toBeVisible();
+    paginas.push(pagina);
+  }
+  const [ana, bia, chato] = paginas as [Page, Page, Page];
+  await expect(ana.getByText('Chato', { exact: true })).toBeVisible();
+
+  await ana.getByRole('button', { name: 'Denunciar o apelido Chato' }).click();
+  await expect(ana.getByRole('button', { name: 'Você já denunciou Chato' })).toBeDisabled();
+  await expect(chato.getByText('Código da sala', { exact: true })).toBeVisible();
+
+  await bia.getByRole('button', { name: 'Denunciar o apelido Chato' }).click();
+  await expect(chato.getByText('Seu apelido foi denunciado pela sala e você saiu dela.')).toBeVisible();
+  await expect(chato.getByRole('button', { name: /Jogar agora/ })).toBeVisible();
+  await expect(ana.getByText('Chato', { exact: true })).toHaveCount(0);
+});
