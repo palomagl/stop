@@ -74,8 +74,9 @@ export function Correcao({ sala }: { sala: EstadoSala }) {
           <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-texto-suave">
             Correção · letra {letra} · {correcao.indice + 1} de {total}
           </p>
-          <h1 className="titulo mt-1 text-4xl uppercase">
-            {correcao.categoria}
+          <h1 className={`titulo mt-1 uppercase ${correcao.categoria.length > 12 ? 'text-3xl' : 'text-4xl'}`}>
+            {/* Espaço invisível depois da barra deixa "FRUTA/VERDURA/LEGUME" quebrar a linha. */}
+            {correcao.categoria.replaceAll('/', '/\u200B')}
             {Object.hasOwn(DICAS_CATEGORIA, correcao.categoria) && (
               <span className="mt-1 block font-sans text-base font-bold normal-case text-texto-suave [text-shadow:none]">
                 {DICAS_CATEGORIA[correcao.categoria]}
