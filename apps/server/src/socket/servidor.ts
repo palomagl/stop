@@ -1,8 +1,11 @@
-import { createServer } from 'node:http';
+import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { Server, type Socket } from 'socket.io';
 import {
   DURACOES,
+  TAMANHO_HISTORICO,
+  TAMANHO_RANKING,
+  dispositivoSchema,
   esquemasCliente,
   type ClienteParaServidor,
   type DadosEvento,
@@ -11,6 +14,8 @@ import {
   type RespostaEntrada,
   type ServidorParaCliente,
 } from '@rabisco/shared';
+import { ArquivoEmMemoria } from '../arquivo/memoria';
+import type { Arquivo } from '../arquivo/tipos';
 import { GerenciadorDeSalas } from '../jogo/gerenciador';
 import type { Jogador, Sala } from '../jogo/sala';
 import { LimiteDeEventos } from './limite';
@@ -29,11 +34,14 @@ export interface OpcoesServidor {
   origens?: string[];
   duracoes?: Partial<Duracoes>;
   aleatorio?: () => number;
+  /** Onde as partidas terminadas são guardadas. Sem ele, ficam na memória. */
+  arquivo?: Arquivo;
 }
 
 export interface ServidorRodando {
   porta: number;
   gerenciador: GerenciadorDeSalas;
+  arquivo: Arquivo;
   fechar: () => Promise<void>;
 }
 
@@ -41,14 +49,45 @@ const INTERVALO_LIMPEZA_MS = 60_000;
 
 export async function iniciarServidor(opcoes: OpcoesServidor = {}): Promise<ServidorRodando> {
   const origens = opcoes.origens?.length ? opcoes.origens : true;
+  const arquivo = opcoes.arquivo ?? new ArquivoEmMemoria();
 
-  const http = createServer((req, res) => {
-    if (req.url === '/health' || req.url === '/') {
-      res.writeHead(200, { 'content-type': 'application/json', 'access-control-allow-origin': '*' });
-      res.end(JSON.stringify({ ok: true, salas: gerenciador.total }));
-      return;
+  function responder(req: IncomingMessage, res: ServerResponse, status: number, corpo: unknown) {
+    const origem = req.headers.origin;
+    const liberada = origens === true ? '*' : origem && origens.includes(origem) ? origem : null;
+    res.writeHead(status, {
+      'content-type': 'application/json; charset=utf-8',
+      ...(liberada ? { 'access-control-allow-origin': liberada, vary: 'Origin' } : {}),
+    });
+    res.end(JSON.stringify(corpo));
+  }
+
+  const http = createServer(async (req, res) => {
+    const url = new URL(req.url ?? '/', 'http://servidor');
+    if (req.method !== 'GET') return responder(req, res, 405, { erro: 'Método não permitido.' });
+
+    if (url.pathname === '/health' || url.pathname === '/') {
+      return responder(req, res, 200, { ok: true, salas: gerenciador.total, banco: arquivo.persistente });
     }
-    res.writeHead(404).end();
+
+    if (url.pathname === '/ranking' || url.pathname === '/historico') {
+      const dispositivo = dispositivoSchema.safeParse(url.searchParams.get('dispositivo'));
+      if (url.pathname === '/historico' && !dispositivo.success) {
+        return responder(req, res, 400, { erro: 'Falta o identificador do aparelho.' });
+      }
+      try {
+        const id = dispositivo.success ? dispositivo.data : null;
+        const dados =
+          url.pathname === '/ranking'
+            ? await arquivo.ranking(id, TAMANHO_RANKING)
+            : await arquivo.historico(id!, TAMANHO_HISTORICO);
+        return responder(req, res, 200, arquivo.persistente ? { ativo: true, dados } : { ativo: false });
+      } catch (erro) {
+        console.error('Erro ao ler o arquivo de partidas:', erro);
+        return responder(req, res, 500, { erro: 'Não deu para ler as partidas agora.' });
+      }
+    }
+
+    responder(req, res, 404, { erro: 'Não encontrado.' });
   });
 
   const io = new Server<ClienteParaServidor, ServidorParaCliente, Record<string, never>, DadosSocket>(http, {
@@ -90,6 +129,9 @@ export async function iniciarServidor(opcoes: OpcoesServidor = {}): Promise<Serv
         if (motivo !== 'saiu') socket.emit('jogador:removido');
       });
       sala.on('vazia', () => pendentes.delete(sala));
+      sala.on('terminou', (partida) => {
+        arquivo.salvarPartida(partida).catch((erro) => console.error('Erro ao salvar a partida:', erro));
+      });
     },
   );
 
@@ -154,7 +196,7 @@ export async function iniciarServidor(opcoes: OpcoesServidor = {}): Promise<Serv
     ouvir('sala:criar', (dados, ack) => {
       sairDaSalaAtual();
       const sala = gerenciador.criar();
-      const jogador = sala.adicionarJogador(dados.apelido, dados.avatar);
+      const jogador = sala.adicionarJogador(dados.apelido, dados.avatar, dados.dispositivo);
       if (typeof jogador === 'string') return void ack?.({ ok: false, erro: jogador });
       vincular(sala, jogador, ack);
     });
@@ -163,8 +205,22 @@ export async function iniciarServidor(opcoes: OpcoesServidor = {}): Promise<Serv
       const sala = gerenciador.buscar(dados.codigo);
       if (!sala) return void ack?.({ ok: false, erro: 'Não achei essa sala. Confere o código?' });
       sairDaSalaAtual();
-      const jogador = sala.adicionarJogador(dados.apelido, dados.avatar);
+      const jogador = sala.adicionarJogador(dados.apelido, dados.avatar, dados.dispositivo);
       if (typeof jogador === 'string') return void ack?.({ ok: false, erro: jogador });
+      vincular(sala, jogador, ack);
+    });
+
+    ouvir('sala:jogarAgora', (dados, ack) => {
+      sairDaSalaAtual();
+      let sala = gerenciador.salaPublicaComVaga();
+      let jogador = sala?.adicionarJogador(dados.apelido, dados.avatar, dados.dispositivo);
+      // Sem sala pública com vaga, ou com o apelido já em uso nela: abre uma sala pública nova.
+      if (!sala || typeof jogador !== 'object') {
+        sala = gerenciador.criar();
+        sala.tornarPublica();
+        jogador = sala.adicionarJogador(dados.apelido, dados.avatar, dados.dispositivo);
+      }
+      if (typeof jogador === 'string' || !jogador) return void ack?.({ ok: false, erro: jogador ?? 'Tenta de novo?' });
       vincular(sala, jogador, ack);
     });
 
@@ -244,10 +300,12 @@ export async function iniciarServidor(opcoes: OpcoesServidor = {}): Promise<Serv
   return {
     porta,
     gerenciador,
+    arquivo,
     fechar: async () => {
       clearInterval(limpeza);
       gerenciador.fechar();
       await io.close();
+      await arquivo.fechar();
     },
   };
 }

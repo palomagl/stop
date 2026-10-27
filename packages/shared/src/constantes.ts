@@ -49,7 +49,11 @@ export const CONFIG_PADRAO: Config = {
   rodadas: 5,
   tempoRodadaSeg: 90,
   letrasExcluidas: ['K', 'W', 'Y', 'X', 'Q'],
+  publica: false,
 };
+
+export const TAMANHO_RANKING = 20;
+export const TAMANHO_HISTORICO = 30;
 
 export const PONTOS = {
   unica: 10,

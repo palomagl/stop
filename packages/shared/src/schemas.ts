@@ -35,6 +35,9 @@ export const codigoSchema = z
 
 const idSchema = z.string().min(1).max(64);
 
+/** Identificador anônimo do aparelho, usado só para histórico e ranking. */
+export const dispositivoSchema = z.string().regex(/^[A-Za-z0-9-]{8,64}$/, 'Identificador de aparelho inválido.');
+
 export const configSchema = z
   .object({
     categorias: z
@@ -48,6 +51,7 @@ export const configSchema = z
     rodadas: z.number().int().min(MIN_RODADAS).max(MAX_RODADAS),
     tempoRodadaSeg: z.number().int().min(MIN_TEMPO_RODADA).max(MAX_TEMPO_RODADA),
     letrasExcluidas: z.array(z.enum(ALFABETO as [string, ...string[]])).transform((l) => [...new Set(l)]),
+    publica: z.boolean(),
   })
   .refine((c) => ALFABETO.length - c.letrasExcluidas.length >= c.rodadas, {
     message: 'Sobram menos letras do que rodadas.',
@@ -55,8 +59,14 @@ export const configSchema = z
 
 /** Um schema por evento que o navegador manda. O servidor ignora o que não passar. */
 export const esquemasCliente = {
-  'sala:criar': z.object({ apelido: apelidoSchema, avatar: avatarSchema }),
-  'sala:entrar': z.object({ codigo: codigoSchema, apelido: apelidoSchema, avatar: avatarSchema }),
+  'sala:criar': z.object({ apelido: apelidoSchema, avatar: avatarSchema, dispositivo: dispositivoSchema }),
+  'sala:entrar': z.object({
+    codigo: codigoSchema,
+    apelido: apelidoSchema,
+    avatar: avatarSchema,
+    dispositivo: dispositivoSchema,
+  }),
+  'sala:jogarAgora': z.object({ apelido: apelidoSchema, avatar: avatarSchema, dispositivo: dispositivoSchema }),
   'sala:reconectar': z.object({ codigo: codigoSchema, token: z.string().min(10).max(128) }),
   'sala:sair': z.undefined().optional(),
   'sala:configurar': configSchema,

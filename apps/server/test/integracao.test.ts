@@ -1,6 +1,16 @@
+import { PGlite } from '@electric-sql/pglite';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { io as conectar, type Socket } from 'socket.io-client';
-import type { ClienteParaServidor, EstadoSala, RespostaEntrada, ServidorParaCliente } from '@rabisco/shared';
+import type {
+  ClienteParaServidor,
+  EstadoSala,
+  LinhaRanking,
+  PartidaNoHistorico,
+  RespostaArquivo,
+  RespostaEntrada,
+  ServidorParaCliente,
+} from '@rabisco/shared';
+import { ArquivoPostgres } from '../src/arquivo/postgres';
 import { iniciarServidor, type ServidorRodando } from '../src/socket/servidor';
 
 type Cliente = Socket<ServidorParaCliente, ClienteParaServidor>;
@@ -46,7 +56,7 @@ function novoCliente() {
   };
 }
 
-function emitirComAck<E extends 'sala:criar' | 'sala:entrar' | 'sala:reconectar'>(
+function emitirComAck<E extends 'sala:criar' | 'sala:entrar' | 'sala:reconectar' | 'sala:jogarAgora'>(
   socket: Cliente,
   evento: E,
   dados: Parameters<ClienteParaServidor[E]>[0],
@@ -56,10 +66,10 @@ function emitirComAck<E extends 'sala:criar' | 'sala:entrar' | 'sala:reconectar'
   });
 }
 
+const DURACOES_RAPIDAS = { sorteio: 50, trava: 100, folgaRespostas: 50, resultado: 2000 };
+
 beforeEach(async () => {
-  servidor = await iniciarServidor({
-    duracoes: { sorteio: 50, trava: 100, folgaRespostas: 50, resultado: 2000 },
-  });
+  servidor = await iniciarServidor({ duracoes: DURACOES_RAPIDAS });
 });
 
 afterEach(async () => {
@@ -74,17 +84,17 @@ describe('partida com 3 clientes', () => {
     const caio = novoCliente();
 
     // Entrar na sala
-    const criada = await emitirComAck(ana.socket, 'sala:criar', { apelido: 'Ana', avatar: 0 });
+    const criada = await emitirComAck(ana.socket, 'sala:criar', { apelido: 'Ana', avatar: 0, dispositivo: 'aparelho-ana' });
     expect(criada.ok).toBe(true);
     if (!criada.ok) return;
     const codigo = criada.codigo;
     expect(codigo).toMatch(/^[A-Z]{5}$/);
 
-    const repetido = await emitirComAck(bia.socket, 'sala:entrar', { codigo, apelido: 'ana', avatar: 1 });
+    const repetido = await emitirComAck(bia.socket, 'sala:entrar', { codigo, apelido: 'ana', avatar: 1, dispositivo: 'aparelho-ana' });
     expect(repetido).toEqual({ ok: false, erro: 'Já tem alguém com esse apelido nessa sala.' });
 
-    const entradaBia = await emitirComAck(bia.socket, 'sala:entrar', { codigo, apelido: 'Bia', avatar: 1 });
-    const entradaCaio = await emitirComAck(caio.socket, 'sala:entrar', { codigo, apelido: 'Caio', avatar: 2 });
+    const entradaBia = await emitirComAck(bia.socket, 'sala:entrar', { codigo, apelido: 'Bia', avatar: 1, dispositivo: 'aparelho-bia' });
+    const entradaCaio = await emitirComAck(caio.socket, 'sala:entrar', { codigo, apelido: 'Caio', avatar: 2, dispositivo: 'aparelho-caio' });
     expect(entradaBia.ok && entradaCaio.ok).toBe(true);
     if (!entradaCaio.ok) return;
 
@@ -96,6 +106,7 @@ describe('partida com 3 clientes', () => {
       rodadas: 1,
       tempoRodadaSeg: 30,
       letrasExcluidas: [],
+      publica: false,
     });
     await bia.esperar((e) => e.config.categorias.length === 3);
     bia.socket.emit('jogador:pronto', { pronto: true });
@@ -173,22 +184,22 @@ describe('partida com 3 clientes', () => {
 
   it('recusa entrar em sala que não existe', async () => {
     const ana = novoCliente();
-    const r = await emitirComAck(ana.socket, 'sala:entrar', { codigo: 'ZZZZZ', apelido: 'Ana', avatar: 0 });
+    const r = await emitirComAck(ana.socket, 'sala:entrar', { codigo: 'ZZZZZ', apelido: 'Ana', avatar: 0, dispositivo: 'aparelho-ana' });
     expect(r).toEqual({ ok: false, erro: 'Não achei essa sala. Confere o código?' });
   });
 
   it('recusa dados inválidos com a mensagem do schema', async () => {
     const ana = novoCliente();
-    const r = await emitirComAck(ana.socket, 'sala:criar', { apelido: 'x'.repeat(20), avatar: 0 });
+    const r = await emitirComAck(ana.socket, 'sala:criar', { apelido: 'x'.repeat(20), avatar: 0, dispositivo: 'aparelho-x' });
     expect(r).toEqual({ ok: false, erro: 'O apelido pode ter até 16 caracteres.' });
   });
 
   it('avisa e remove quem é expulso pelo dono', async () => {
     const ana = novoCliente();
     const bia = novoCliente();
-    const criada = await emitirComAck(ana.socket, 'sala:criar', { apelido: 'Ana', avatar: 0 });
+    const criada = await emitirComAck(ana.socket, 'sala:criar', { apelido: 'Ana', avatar: 0, dispositivo: 'aparelho-ana' });
     if (!criada.ok) throw new Error('não criou');
-    await emitirComAck(bia.socket, 'sala:entrar', { codigo: criada.codigo, apelido: 'Bia', avatar: 1 });
+    await emitirComAck(bia.socket, 'sala:entrar', { codigo: criada.codigo, apelido: 'Bia', avatar: 1, dispositivo: 'aparelho-bia' });
     const estado = await ana.esperar((e) => e.jogadores.length === 2);
     const removida = new Promise((r) => bia.socket.once('jogador:removido', () => r(true)));
     ana.socket.emit('sala:remover', { jogadorId: estado.jogadores[1]!.id });
@@ -198,9 +209,115 @@ describe('partida com 3 clientes', () => {
 
   it('descarta eventos em excesso de uma mesma conexão', async () => {
     const ana = novoCliente();
-    await emitirComAck(ana.socket, 'sala:criar', { apelido: 'Ana', avatar: 0 });
+    await emitirComAck(ana.socket, 'sala:criar', { apelido: 'Ana', avatar: 0, dispositivo: 'aparelho-ana' });
     const erro = new Promise<string>((r) => ana.socket.once('sala:erro', (e) => r(e.mensagem)));
     for (let i = 0; i < 60; i++) ana.socket.emit('reacao:enviar', { emoji: '🔥' });
     expect(await erro).toMatch(/Calma/);
+  });
+});
+
+describe('Jogar agora', () => {
+  it('junta quem toca em "Jogar agora" na mesma sala pública', async () => {
+    const ana = novoCliente();
+    const bia = novoCliente();
+    const r1 = await emitirComAck(ana.socket, 'sala:jogarAgora', { apelido: 'Ana', avatar: 0, dispositivo: 'aparelho-ana' });
+    const r2 = await emitirComAck(bia.socket, 'sala:jogarAgora', { apelido: 'Bia', avatar: 1, dispositivo: 'aparelho-bia' });
+    expect(r1.ok && r2.ok).toBe(true);
+    if (!r1.ok || !r2.ok) return;
+    expect(r2.codigo).toBe(r1.codigo);
+    const estado = await ana.esperar((e) => e.jogadores.length === 2);
+    expect(estado.config.publica).toBe(true);
+  });
+
+  it('não coloca ninguém em sala particular', async () => {
+    const ana = novoCliente();
+    const bia = novoCliente();
+    const privada = await emitirComAck(ana.socket, 'sala:criar', { apelido: 'Ana', avatar: 0, dispositivo: 'aparelho-ana' });
+    const publica = await emitirComAck(bia.socket, 'sala:jogarAgora', { apelido: 'Bia', avatar: 1, dispositivo: 'aparelho-bia' });
+    expect(privada.ok && publica.ok).toBe(true);
+    if (!privada.ok || !publica.ok) return;
+    expect(publica.codigo).not.toBe(privada.codigo);
+  });
+
+  it('abre outra sala pública quando o apelido já está em uso na que tem vaga', async () => {
+    const ana = novoCliente();
+    const outraAna = novoCliente();
+    const r1 = await emitirComAck(ana.socket, 'sala:jogarAgora', { apelido: 'Ana', avatar: 0, dispositivo: 'aparelho-ana' });
+    const r2 = await emitirComAck(outraAna.socket, 'sala:jogarAgora', { apelido: 'ana', avatar: 2, dispositivo: 'aparelho-ana2' });
+    expect(r1.ok && r2.ok).toBe(true);
+    if (!r1.ok || !r2.ok) return;
+    expect(r2.codigo).not.toBe(r1.codigo);
+  });
+});
+
+describe('histórico e ranking', () => {
+  it('sem banco, as rotas respondem que o recurso está desligado', async () => {
+    const resposta = await fetch(`http://localhost:${servidor.porta}/ranking`);
+    expect(await resposta.json()).toEqual({ ativo: false });
+  });
+
+  it('com banco, a partida terminada aparece no histórico e no ranking', async () => {
+    await servidor.fechar();
+    servidor = await iniciarServidor({
+      duracoes: DURACOES_RAPIDAS,
+      arquivo: await ArquivoPostgres.abrir(new PGlite()),
+    });
+
+    const ana = novoCliente();
+    const bia = novoCliente();
+    const criada = await emitirComAck(ana.socket, 'sala:criar', { apelido: 'Ana', avatar: 3, dispositivo: 'aparelho-ana' });
+    if (!criada.ok) throw new Error('não criou');
+    await emitirComAck(bia.socket, 'sala:entrar', {
+      codigo: criada.codigo,
+      apelido: 'Bia',
+      avatar: 4,
+      dispositivo: 'aparelho-bia',
+    });
+    await ana.esperar((e) => e.jogadores.length === 2);
+    ana.socket.emit('sala:configurar', {
+      categorias: ['Nome'],
+      rodadas: 1,
+      tempoRodadaSeg: 30,
+      letrasExcluidas: [],
+      publica: false,
+    });
+    await bia.esperar((e) => e.config.categorias.length === 1);
+    bia.socket.emit('jogador:pronto', { pronto: true });
+    await ana.esperar((e) => e.jogadores.every((j) => j.dono || j.pronto));
+    ana.socket.emit('partida:iniciar');
+    const { letra } = await ana.esperar((e) => e.fase === 'respostas');
+    ana.socket.emit('rodada:stop', { respostas: { Nome: `${letra}na` } });
+    await ana.esperar((e) => e.fase === 'correcao');
+    for (const c of [ana, bia]) c.socket.emit('correcao:pronto', { indice: 0 });
+    await ana.esperar((e) => e.fase === 'resultado');
+    for (const c of [ana, bia]) c.socket.emit('resultado:pronto', { rodada: 1 });
+    await ana.esperar((e) => e.fase === 'fim');
+
+    // A gravação é assíncrona: espera ela aparecer.
+    let ranking: LinhaRanking[] = [];
+    for (let tentativa = 0; tentativa < 40 && !ranking.length; tentativa++) {
+      await new Promise((r) => setTimeout(r, 50));
+      const resposta = (await (
+        await fetch(`http://localhost:${servidor.porta}/ranking?dispositivo=aparelho-bia`)
+      ).json()) as RespostaArquivo<LinhaRanking[]>;
+      expect(resposta.ativo).toBe(true);
+      if (resposta.ativo) ranking = resposta.dados;
+    }
+    expect(ranking.map((l) => [l.apelido, l.vitorias, l.eu])).toEqual([
+      ['Ana', 1, false],
+      ['Bia', 0, true],
+    ]);
+
+    const historico = (await (
+      await fetch(`http://localhost:${servidor.porta}/historico?dispositivo=aparelho-ana`)
+    ).json()) as RespostaArquivo<PartidaNoHistorico[]>;
+    if (!historico.ativo) throw new Error('histórico deveria estar ativo');
+    expect(historico.dados).toHaveLength(1);
+    expect(historico.dados[0]).toMatchObject({ minhaPosicao: 1, meusPontos: 10, categorias: ['Nome'] });
+  }, 20_000);
+
+  it('histórico exige o identificador do aparelho', async () => {
+    const resposta = await fetch(`http://localhost:${servidor.porta}/historico`);
+    expect(resposta.status).toBe(400);
   });
 });

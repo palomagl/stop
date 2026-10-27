@@ -23,12 +23,15 @@ import {
   type ResumoPartida,
   type Voto,
 } from '@rabisco/shared';
+import type { PartidaTerminada } from '../arquivo/tipos';
 
 export interface Jogador {
   id: string;
   token: string;
   apelido: string;
   avatar: number;
+  /** Identificador anônimo do aparelho, para histórico e ranking. */
+  dispositivo: string;
   online: boolean;
   socketId: string | null;
   /** Pronto no lobby. Na correção e no resultado vale o conjunto de prontos da etapa. */
@@ -48,6 +51,8 @@ interface EventosSala {
   reacao: [{ id: string; jogadorId: string; emoji: Reacao }];
   removido: [Jogador, MotivoSaida];
   vazia: [];
+  /** Partida chegou ao fim com pelo menos uma rodada completa: vai para o histórico. */
+  terminou: [PartidaTerminada];
 }
 
 interface CorrecaoInterna {
@@ -96,6 +101,7 @@ export class Sala extends EventEmitter<EventosSala> {
   private resultado: { linhas: LinhaPlacar[]; prontos: Set<string> } | null = null;
   private fim: FimDePartida | null = null;
   private historico: RegistroResposta[] = [];
+  private rodadasCompletas = 0;
   private ultimaReacao = new Map<string, number>();
 
   constructor(
@@ -108,7 +114,7 @@ export class Sala extends EventEmitter<EventosSala> {
 
   // ── Entrada e saída ────────────────────────────────────────────────
 
-  adicionarJogador(apelido: string, avatar: number): Jogador | string {
+  adicionarJogador(apelido: string, avatar: number, dispositivo: string): Jogador | string {
     if (this.jogadores.size >= MAX_JOGADORES) return 'A sala está cheia.';
     const repetido = [...this.jogadores.values()].some((j) => normalizar(j.apelido) === normalizar(apelido));
     if (repetido) return 'Já tem alguém com esse apelido nessa sala.';
@@ -118,6 +124,7 @@ export class Sala extends EventEmitter<EventosSala> {
       token: randomBytes(24).toString('hex'),
       apelido,
       avatar,
+      dispositivo,
       online: false,
       socketId: null,
       pronto: false,
@@ -131,6 +138,15 @@ export class Sala extends EventEmitter<EventosSala> {
     this.donoId ??= jogador.id;
     this.emit('mudou');
     return jogador;
+  }
+
+  temAlguemOnline(): boolean {
+    return [...this.jogadores.values()].some((j) => j.online);
+  }
+
+  /** Abre a sala para o "Jogar agora". Usado quando ela nasce de lá. */
+  tornarPublica(): void {
+    this.config = { ...this.config, publica: true };
   }
 
   porToken(token: string): Jogador | undefined {
@@ -362,6 +378,7 @@ export class Sala extends EventEmitter<EventosSala> {
     this.resultado = null;
     this.fim = null;
     this.historico = [];
+    this.rodadasCompletas = 0;
   }
 
   private novaPartida(): void {
@@ -487,6 +504,7 @@ export class Sala extends EventEmitter<EventosSala> {
 
     this.correcao = null;
     this.resultado = { linhas, prontos: new Set() };
+    this.rodadasCompletas++;
     this.fase = 'resultado';
     this.definirPrazo(this.opcoes.duracoes.resultado, () => this.proximaEtapa());
     this.emit('mudou');
@@ -511,6 +529,23 @@ export class Sala extends EventEmitter<EventosSala> {
     this.correcao = null;
     this.resultado = null;
     this.fase = 'fim';
+    if (this.rodadasCompletas > 0 && presentes.length >= MIN_JOGADORES) {
+      this.emit('terminou', {
+        id: randomUUID(),
+        codigo: this.codigo,
+        terminouEm: new Date(),
+        rodadas: this.rodadasCompletas,
+        categorias: [...this.config.categorias],
+        letras: [...this.letrasUsadas],
+        jogadores: presentes.map((j) => ({
+          dispositivo: j.dispositivo,
+          apelido: j.apelido,
+          avatar: j.avatar,
+          pontos: j.pontos,
+          posicao: posicao[j.id]!,
+        })),
+      });
+    }
     this.emit('mudou');
   }
 

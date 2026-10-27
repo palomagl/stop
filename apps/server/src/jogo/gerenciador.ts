@@ -1,4 +1,4 @@
-import { ALFABETO_CODIGO, TAMANHO_CODIGO, contemPalavrao } from '@rabisco/shared';
+import { ALFABETO_CODIGO, MAX_JOGADORES, TAMANHO_CODIGO, contemPalavrao } from '@rabisco/shared';
 import { Sala, type OpcoesSala } from './sala';
 
 export class GerenciadorDeSalas {
@@ -23,6 +23,21 @@ export class GerenciadorDeSalas {
     sala.once('vazia', () => this.salas.delete(sala.codigo));
     this.aoCriarSala(sala);
     return sala;
+  }
+
+  /**
+   * Sala pública com vaga para o "Jogar agora". Prefere quem ainda está no lobby,
+   * depois a sala mais cheia (para juntar gente em vez de espalhar).
+   */
+  salaPublicaComVaga(): Sala | undefined {
+    const candidatas = [...this.salas.values()].filter(
+      (s) => s.config.publica && s.fase !== 'fim' && s.jogadores.size < MAX_JOGADORES && s.temAlguemOnline(),
+    );
+    candidatas.sort(
+      (a, b) =>
+        Number(b.fase === 'lobby') - Number(a.fase === 'lobby') || b.jogadores.size - a.jogadores.size,
+    );
+    return candidatas[0];
   }
 
   /** Apaga salas em que ninguém está conectado há mais tempo que o limite. */

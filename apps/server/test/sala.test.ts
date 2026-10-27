@@ -7,12 +7,13 @@ const CONFIG: Config = {
   rodadas: 2,
   tempoRodadaSeg: 30,
   letrasExcluidas: ['K', 'W', 'Y', 'X', 'Q'],
+  publica: false,
 };
 
 function novaSala(aleatorio = () => 0) {
   const sala = new Sala('TESTE', { duracoes: DURACOES, aleatorio });
   const entrar = (apelido: string) => {
-    const j = sala.adicionarJogador(apelido, 0) as Jogador;
+    const j = sala.adicionarJogador(apelido, 0, `aparelho-${apelido}`) as Jogador;
     sala.conectar(j, `socket-${apelido}`);
     return j;
   };
@@ -46,13 +47,13 @@ describe('Sala', () => {
 
     it('recusa apelido repetido, mesmo com acento e maiúscula diferentes', () => {
       const { sala } = novaSala();
-      expect(sala.adicionarJogador('ána', 1)).toBe('Já tem alguém com esse apelido nessa sala.');
+      expect(sala.adicionarJogador('ána', 1, 'aparelho-outro')).toBe('Já tem alguém com esse apelido nessa sala.');
     });
 
     it('recusa a 11ª pessoa', () => {
       const { sala, entrar } = novaSala();
       for (let i = 0; i < 8; i++) entrar(`J${i}`);
-      expect(sala.adicionarJogador('Sobrou', 0)).toBe('A sala está cheia.');
+      expect(sala.adicionarJogador('Sobrou', 0, 'aparelho-sobrou')).toBe('A sala está cheia.');
     });
 
     it('só o dono configura e começa', () => {
@@ -341,5 +342,43 @@ describe('Sala', () => {
     vi.advanceTimersByTime(500);
     sala.reagir(ana.id, '😂');
     expect(reacoes).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('Sala → histórico', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it('avisa quando a partida termina, com aparelho, pontos e posição de cada um', () => {
+    const { sala, ana, bia } = novaSala();
+    sala.configurar(ana.id, { ...CONFIG, rodadas: 1 });
+    const terminou = vi.fn();
+    sala.on('terminou', terminou);
+    comecar(sala, ana, [bia]);
+    const letra = sala.letra!;
+    responder(sala, ana, { Nome: `${letra}na`, Animal: `${letra}rara` });
+    sala.stop(ana.id, {});
+    vi.advanceTimersByTime(DURACOES.trava);
+    for (let c = 0; c < CONFIG.categorias.length; c++) for (const j of [ana, bia]) sala.prontoCorrecao(j.id, c);
+    for (const j of [ana, bia]) sala.prontoResultado(j.id, 1);
+
+    expect(sala.fase).toBe('fim');
+    expect(terminou).toHaveBeenCalledOnce();
+    const partida = terminou.mock.calls[0]![0];
+    expect(partida).toMatchObject({ codigo: 'TESTE', rodadas: 1, categorias: CONFIG.categorias, letras: [letra] });
+    expect(partida.jogadores).toEqual([
+      { dispositivo: 'aparelho-Ana', apelido: 'Ana', avatar: 0, pontos: 20, posicao: 1 },
+      { dispositivo: 'aparelho-Bia', apelido: 'Bia', avatar: 0, pontos: 0, posicao: 2 },
+    ]);
+  });
+
+  it('não guarda partida que acabou antes de completar uma rodada', () => {
+    const { sala, ana, bia } = novaSala();
+    const terminou = vi.fn();
+    sala.on('terminou', terminou);
+    comecar(sala, ana, [bia]);
+    sala.sair(bia.id);
+    expect(sala.fase).toBe('fim');
+    expect(terminou).not.toHaveBeenCalled();
   });
 });

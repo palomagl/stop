@@ -13,6 +13,8 @@ export interface Config {
   rodadas: number;
   tempoRodadaSeg: number;
   letrasExcluidas: string[];
+  /** Sala pública: aparece para quem toca em "Jogar agora". */
+  publica: boolean;
 }
 
 export interface JogadorPublico {
@@ -92,3 +94,27 @@ export interface EstadoSala {
   resultado: ResultadoRodada | null;
   fim: FimDePartida | null;
 }
+
+/** Uma partida terminada, do ponto de vista de quem pergunta. */
+export interface PartidaNoHistorico {
+  id: string;
+  terminouEm: string;
+  rodadas: number;
+  categorias: string[];
+  minhaPosicao: number;
+  meusPontos: number;
+  jogadores: { apelido: string; avatar: number; pontos: number; posicao: number; eu: boolean }[];
+}
+
+export interface LinhaRanking {
+  posicao: number;
+  apelido: string;
+  avatar: number;
+  partidas: number;
+  vitorias: number;
+  pontos: number;
+  eu: boolean;
+}
+
+/** Resposta das rotas de histórico e ranking. `ativo` é falso quando o servidor roda sem banco. */
+export type RespostaArquivo<T> = { ativo: true; dados: T } | { ativo: false };

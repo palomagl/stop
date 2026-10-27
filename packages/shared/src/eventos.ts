@@ -5,12 +5,18 @@ export type RespostaEntrada =
   | { ok: false; erro: string };
 
 /** Eventos que o navegador manda para o servidor. */
+export interface DadosPerfil {
+  apelido: string;
+  avatar: number;
+  /** Identificador anônimo do aparelho, para o histórico e o ranking. */
+  dispositivo: string;
+}
+
 export interface ClienteParaServidor {
-  'sala:criar': (dados: { apelido: string; avatar: number }, ack: (r: RespostaEntrada) => void) => void;
-  'sala:entrar': (
-    dados: { codigo: string; apelido: string; avatar: number },
-    ack: (r: RespostaEntrada) => void,
-  ) => void;
+  'sala:criar': (dados: DadosPerfil, ack: (r: RespostaEntrada) => void) => void;
+  'sala:entrar': (dados: DadosPerfil & { codigo: string }, ack: (r: RespostaEntrada) => void) => void;
+  /** Entra numa sala pública com vaga, ou cria uma nova se não houver. */
+  'sala:jogarAgora': (dados: DadosPerfil, ack: (r: RespostaEntrada) => void) => void;
   'sala:reconectar': (dados: { codigo: string; token: string }, ack: (r: RespostaEntrada) => void) => void;
   'sala:sair': () => void;
   'sala:configurar': (config: Config) => void;

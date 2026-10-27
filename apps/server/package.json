@@ -12,10 +12,13 @@
   },
   "dependencies": {
     "@rabisco/shared": "*",
+    "pg": "^8.23.1",
     "socket.io": "^4.8.4",
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.9",
+    "@types/pg": "^8.23.1",
     "socket.io-client": "^4.8.4",
     "tsup": "^8.5.1",
     "tsx": "^4.23.15"
