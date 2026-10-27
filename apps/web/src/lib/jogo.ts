@@ -15,9 +15,28 @@ import { idDoDispositivo } from './dispositivo';
 import { ultimaConfig } from './listas';
 import { sons } from './sons';
 
-export const URL_SERVIDOR: string = import.meta.env.VITE_SERVER_URL ?? 'http://localhost:3333';
+/** Endereço do servidor. Sem VITE_SERVER_URL, usa o servidor local do `npm run dev`. */
+export const URL_SERVIDOR: string = (import.meta.env.VITE_SERVER_URL ?? 'http://localhost:3333').replace(/\/+$/, '');
 
-export type Conexao = 'acordando' | 'online' | 'caiu';
+/**
+ * Erros de configuração que fariam o site esperar para sempre. Melhor avisar logo
+ * quem publicou do que mostrar "acordando" sem fim.
+ */
+export function problemaDeConfiguracao(): string | null {
+  const paginaLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  if (!paginaLocal && /\/\/(localhost|127\.0\.0\.1)([:/]|$)/.test(URL_SERVIDOR)) {
+    return 'O site foi publicado sem o endereço do servidor. Na Vercel, crie a variável VITE_SERVER_URL com o endereço do servidor no Render (por exemplo https://stopou-servidor.onrender.com) e publique de novo.';
+  }
+  if (window.location.protocol === 'https:' && URL_SERVIDOR.startsWith('http:')) {
+    return 'O site está em https, mas o endereço do servidor começa com http. O navegador bloqueia essa mistura: troque VITE_SERVER_URL para https na Vercel e publique de novo.';
+  }
+  return null;
+}
+
+/** Depois disso esperando, o servidor provavelmente não vai acordar sozinho. */
+const LIMITE_ACORDAR_MS = 75_000;
+
+export type Conexao = 'acordando' | 'online' | 'caiu' | 'sem-configuracao' | 'nao-acordou';
 
 export interface ReacaoNaTela {
   id: string;
@@ -36,6 +55,8 @@ export interface EstadoApp {
   diferencaRelogio: number;
   aviso: { id: number; texto: string } | null;
   reacoes: ReacaoNaTela[];
+  /** Última mensagem de erro de conexão, para ajudar a descobrir o problema. */
+  erroConexao: string | null;
 }
 
 interface Sessao {
@@ -52,6 +73,7 @@ let estado: EstadoApp = {
   diferencaRelogio: 0,
   aviso: null,
   reacoes: [],
+  erroConexao: null,
 };
 const ouvintes = new Set<() => void>();
 
@@ -134,7 +156,9 @@ socket.on('connect', () => {
   });
 });
 
-socket.on('disconnect', () => mudar({ conexao: estado.conexao === 'acordando' ? 'acordando' : 'caiu' }));
+socket.on('disconnect', () => mudar({ conexao: estado.conexao === 'online' ? 'caiu' : estado.conexao }));
+
+socket.on('connect_error', (erro) => mudar({ erroConexao: erro.message }));
 
 socket.on('sala:estado', (sala) => {
   mudar({ sala, diferencaRelogio: sala.agora - Date.now() });
@@ -156,8 +180,26 @@ socket.on('jogador:removido', () => {
   esquecerSala();
 });
 
+let prazoAcordar: ReturnType<typeof setTimeout> | null = null;
+
 export function conectar() {
+  const problema = problemaDeConfiguracao();
+  if (problema) {
+    mudar({ conexao: 'sem-configuracao', restaurando: false });
+    return;
+  }
+  mudar({ conexao: 'acordando', erroConexao: null });
+  if (prazoAcordar) clearTimeout(prazoAcordar);
+  // O Socket.IO continua tentando sozinho; o prazo só muda o que a tela mostra.
+  prazoAcordar = setTimeout(() => {
+    if (estado.conexao === 'acordando') mudar({ conexao: 'nao-acordou' });
+  }, LIMITE_ACORDAR_MS);
   socket.connect();
+}
+
+export function tentarDeNovo() {
+  socket.disconnect();
+  conectar();
 }
 
 // ── Ações ───────────────────────────────────────────────────────────────
