@@ -60,8 +60,23 @@ export interface LinhaPlacar {
   posicaoAnterior: number;
 }
 
+/** Uma categoria da folha da rodada: o que cada pessoa escreveu e quanto valeu. */
+export interface FolhaCategoria {
+  categoria: string;
+  respostas: {
+    jogadorId: string;
+    apelido: string;
+    avatar: number;
+    texto: string;
+    pontos: number;
+    anulada: boolean;
+  }[];
+}
+
 export interface ResultadoRodada {
   linhas: LinhaPlacar[];
+  /** Todas as respostas da rodada, categoria por categoria. */
+  folha: FolhaCategoria[];
   prontos: string[];
 }
 
@@ -91,6 +106,15 @@ export interface EstadoSala {
   /** Horário do servidor quando o retrato foi montado, para acertar o relógio do navegador. */
   agora: number;
   stopPor: string | null;
+  /** Letra que a sala acabou de pular nesta rodada, para avisar no sorteio. */
+  letraPulada: string | null;
+  /** Votação para pular a letra (só durante as respostas). */
+  pularLetra: {
+    disponivel: boolean;
+    votos: number;
+    necessarios: number;
+    euVotei: boolean;
+  };
   minhasRespostas: Record<string, string>;
   correcao: Correcao | null;
   resultado: ResultadoRodada | null;
