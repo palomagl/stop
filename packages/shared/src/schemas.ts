@@ -71,6 +71,7 @@ export const esquemasCliente = {
   'sala:sair': z.undefined().optional(),
   'sala:configurar': configSchema,
   'sala:remover': z.object({ jogadorId: idSchema }),
+  'jogador:denunciar': z.object({ jogadorId: idSchema }),
   'jogador:pronto': z.object({ pronto: z.boolean() }),
   'partida:iniciar': z.undefined().optional(),
   'partida:jogarDeNovo': z.object({ voltarParaSala: z.boolean() }),

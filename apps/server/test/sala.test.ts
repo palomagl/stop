@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DURACOES, type Config } from '@rabisco/shared';
-import { Sala, type Jogador } from '../src/jogo/sala';
+import { Sala, denunciasNecessarias, type Jogador } from '../src/jogo/sala';
 
 const CONFIG: Config = {
   categorias: ['Nome', 'Animal'],
@@ -380,5 +380,67 @@ describe('Sala → histórico', () => {
     sala.sair(bia.id);
     expect(sala.fase).toBe('fim');
     expect(terminou).not.toHaveBeenCalled();
+  });
+});
+
+describe('Sala → denúncia de apelido', () => {
+  function salaPublica(pessoas: string[]) {
+    const ctx = novaSala();
+    ctx.sala.configurar(ctx.ana.id, { ...CONFIG, publica: true });
+    const outros = pessoas.map((p) => ctx.entrar(p));
+    return { ...ctx, outros };
+  }
+
+  it('precisa da maioria das outras pessoas, e nunca menos de duas', () => {
+    expect(denunciasNecessarias(2)).toBe(2);
+    expect(denunciasNecessarias(3)).toBe(2);
+    expect(denunciasNecessarias(5)).toBe(2);
+    expect(denunciasNecessarias(6)).toBe(3);
+    expect(denunciasNecessarias(10)).toBe(5);
+  });
+
+  it('tira da sala quem recebe denúncias suficientes', () => {
+    const { sala, ana, bia, outros } = salaPublica(['Caio']);
+    const removido = vi.fn();
+    sala.on('removido', removido);
+    const caio = outros[0]!;
+    sala.denunciar(ana.id, caio.id);
+    expect(sala.jogadores.has(caio.id)).toBe(true);
+    expect(sala.estadoPara(ana.id).jogadores.find((j) => j.id === caio.id)?.denunciadoPorMim).toBe(true);
+    expect(sala.estadoPara(bia.id).jogadores.find((j) => j.id === caio.id)?.denunciadoPorMim).toBe(false);
+    sala.denunciar(bia.id, caio.id);
+    expect(sala.jogadores.has(caio.id)).toBe(false);
+    expect(removido).toHaveBeenCalledWith(expect.objectContaining({ id: caio.id }), 'denuncias');
+  });
+
+  it('a mesma pessoa denunciando duas vezes conta uma só', () => {
+    const { sala, ana, outros } = salaPublica(['Caio']);
+    const caio = outros[0]!;
+    sala.denunciar(ana.id, caio.id);
+    sala.denunciar(ana.id, caio.id);
+    expect(sala.jogadores.has(caio.id)).toBe(true);
+  });
+
+  it('ninguém se denuncia', () => {
+    const { sala, ana, bia } = salaPublica([]);
+    sala.denunciar(ana.id, ana.id);
+    sala.denunciar(bia.id, ana.id);
+    expect(sala.jogadores.has(ana.id)).toBe(true);
+  });
+
+  it('não vale em sala particular', () => {
+    const { sala, ana, bia } = novaSala();
+    expect(sala.denunciar(ana.id, bia.id)).toMatch(/salas públicas/);
+  });
+
+  it('denúncias de quem saiu da sala deixam de contar', () => {
+    const { sala, ana, bia, outros } = salaPublica(['Caio', 'Duda']);
+    const [caio, duda] = outros as [Jogador, Jogador];
+    sala.denunciar(bia.id, caio.id);
+    sala.sair(bia.id);
+    sala.denunciar(ana.id, caio.id);
+    expect(sala.jogadores.has(caio.id)).toBe(true);
+    sala.denunciar(duda.id, caio.id);
+    expect(sala.jogadores.has(caio.id)).toBe(false);
   });
 });

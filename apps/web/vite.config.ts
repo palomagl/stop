@@ -3,14 +3,32 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+/**
+ * Endereço público do site, para a prévia do link: WhatsApp e redes só mostram a imagem
+ * com o endereço completo. Na Vercel ele vem sozinho; em outro lugar, use VITE_SITE_URL.
+ */
+function enderecoDoSite(env: Record<string, string>): string {
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  return (env.VITE_SITE_URL || (vercel ? `https://${vercel}` : '')).replace(/\/+$/, '');
+}
+
 export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), 'VITE_');
   // Sem o endereço do servidor, o site publicado ficaria esperando para sempre.
-  if (mode === 'production' && !loadEnv(mode, process.cwd(), 'VITE_').VITE_SERVER_URL) {
+  if (mode === 'production' && !env.VITE_SERVER_URL) {
     console.warn('\n⚠️  VITE_SERVER_URL não definido: o site vai procurar o servidor em http://localhost:3333.\n');
   }
+  const site = enderecoDoSite(env);
 
   return {
     plugins: [
+      {
+        name: 'previa-do-link',
+        transformIndexHtml: {
+          order: 'pre',
+          handler: (html: string) => html.replaceAll('%ENDERECO_DO_SITE%', site),
+        },
+      },
       react(),
       tailwindcss(),
       // Instalação como app: manifesto, ícones e um service worker que guarda a "casca" do site.

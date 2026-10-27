@@ -29,6 +29,8 @@ export interface JogadorPublico {
   preenchidas: number;
   /** Falso para quem entrou no meio de uma rodada e espera a próxima. */
   participando: boolean;
+  /** Se quem está vendo já denunciou o apelido dessa pessoa. */
+  denunciadoPorMim: boolean;
 }
 
 export interface RespostaEmCorrecao {

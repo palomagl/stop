@@ -8,6 +8,7 @@ import { Tic } from '../componentes/Tic';
 import { acoes } from '../lib/jogo';
 import { useTempoRestante } from '../lib/relogio';
 import { sons } from '../lib/sons';
+import { vibracoes } from '../lib/vibrar';
 
 /** Espera um pouco depois da última tecla antes de mandar o rascunho. */
 const ESPERA_RASCUNHO_MS = 250;
@@ -50,6 +51,16 @@ export function Respostas({ sala }: { sala: EstadoSala }) {
       setTimeout(() => enviar(categoria), ESPERA_RASCUNHO_MS),
     );
   }
+
+  // Avisa no corpo, além do cronômetro, quando faltam 10 segundos e quando acaba.
+  const segundos = Math.ceil(restante / 1000);
+  useEffect(() => {
+    if (travando || !participando) return;
+    if (segundos === 10) vibracoes.alerta();
+    if (segundos === 0) vibracoes.fim();
+    // Uma vez por segundo, só nos dois momentos.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [segundos]);
 
   // Quando o tempo acaba, manda tudo o que ainda não foi.
   useEffect(() => {
@@ -179,7 +190,10 @@ function AvisoStop({ sala, restante }: { sala: EstadoSala; restante: number }) {
   const numero = Math.max(1, Math.ceil(restante / 1000));
 
   useEffect(() => {
-    if (restante > 0) sons.contagem();
+    if (restante > 0) {
+      sons.contagem();
+      vibracoes.tique();
+    }
     // Toca uma vez por número da contagem.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [numero]);

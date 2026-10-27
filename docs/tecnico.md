@@ -130,6 +130,15 @@ Para jogar entre amigos, criar conta seria só atrito. Então cada aparelho ganh
 
 As listas salvas ficam no `localStorage` de quem é dono da sala, e não no banco. Elas funcionam sem cadastro e sem servidor, e cada pessoa tem as suas. A troca é que elas não acompanham você para outro celular.
 
+### Denúncia de apelido
+
+Nas salas públicas ("Jogar agora") aparece gente desconhecida, então cada pessoa pode tocar na 🚩 ao lado de outra, na sala de espera ou na correção. Quem recebe denúncia da **maioria das outras pessoas da sala, e de pelo menos duas**, sai da sala e vê o motivo na tela. Cada pessoa denuncia uma vez, a própria pessoa não conta, e as denúncias de quem sai da sala deixam de valer. Nas salas particulares a bandeira não aparece, porque quem é dono já pode remover alguém. Cada denúncia fica registrada no log do servidor.
+
+### Prévia do link e vibração
+
+- O `index.html` tem as etiquetas Open Graph que o WhatsApp lê. A imagem (`public/og-stopou.jpg`, 1200 × 630) precisa de endereço completo: na Vercel ele vem sozinho de `VERCEL_PROJECT_PRODUCTION_URL`; em outra hospedagem, defina `VITE_SITE_URL`.
+- O celular vibra quando alguém aperta STOP, no "3, 2, 1", quando faltam 10 segundos e quando o tempo acaba. Só funciona no Android: o iPhone não deixa sites vibrarem.
+
 ### O que mudaria com mais de um servidor
 
 Hoje as salas vivem na memória de um único processo, e isso basta para o tamanho do jogo. Para rodar em várias instâncias:
