@@ -89,3 +89,48 @@ test('código errado mostra aviso e não entra', async ({ page }) => {
   await entrarPorCodigo(page, 'ZZZZZ', 'Caio');
   await expect(page.getByRole('alert')).toHaveText('Não achei essa sala. Confere o código?');
 });
+
+test('"Jogar agora" junta duas pessoas na mesma sala pública', async ({ browser }) => {
+  const paginas = [await (await browser.newContext()).newPage(), await (await browser.newContext()).newPage()];
+  for (const [i, pagina] of paginas.entries()) {
+    await pagina.goto('/');
+    await pagina.getByRole('button', { name: /Jogar agora/ }).click();
+    await pagina.getByLabel('Seu apelido').fill(`Pessoa ${i + 1}`);
+    await pagina.getByRole('button', { name: 'Procurar sala' }).click();
+    await expect(pagina.getByText('Código da sala', { exact: true })).toBeVisible();
+  }
+  const [a, b] = paginas as [Page, Page];
+  expect(new URL(a.url()).pathname).toBe(new URL(b.url()).pathname);
+  await expect(a.getByText('Pessoa 2', { exact: true })).toBeVisible();
+  await expect(a.getByRole('switch', { name: /Sala pública/ })).toBeChecked();
+});
+
+test('lista de categorias salva e regras lembradas para a próxima sala', async ({ page }) => {
+  await criarSala(page, 'Ana');
+  await page.getByRole('button', { name: /^CEP/ }).click();
+  await expect(page.getByRole('button', { name: /^CEP/ })).toHaveAttribute('aria-pressed', 'false');
+  await page.getByLabel('Nova categoria').fill('Time de futebol');
+  await page.getByRole('button', { name: 'Adicionar' }).click();
+  await expect(page.getByRole('button', { name: /^Time de futebol/ })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByLabel('Salvar estas categorias como lista').fill('Nossa lista');
+  await page.getByRole('button', { name: 'Salvar', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Nossa lista (12)' })).toBeVisible();
+
+  // Sai e cria outra sala: as regras voltam iguais e a lista continua lá
+  await page.getByRole('button', { name: 'Sair da sala' }).click();
+  await criarSala(page, 'Ana');
+  await expect(page.getByRole('button', { name: /^CEP/ })).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByRole('button', { name: /^Time de futebol/ })).toHaveAttribute('aria-pressed', 'true');
+
+  // Aplicar a lista também funciona depois de mexer nas categorias
+  await page.getByRole('button', { name: /^Nome/ }).click();
+  await expect(page.getByRole('button', { name: /^Nome/ })).toHaveAttribute('aria-pressed', 'false');
+  await page.getByRole('button', { name: 'Nossa lista (12)' }).click();
+  await expect(page.getByRole('button', { name: /^Nome/ })).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('ranking avisa quando o servidor está sem banco', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /Ranking/ }).click();
+  await expect(page.getByText(/não está guardando partidas/)).toBeVisible();
+});

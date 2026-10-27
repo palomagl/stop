@@ -6,8 +6,24 @@ import { Logo } from '../componentes/Logo';
 import { Tela } from '../componentes/Tela';
 import { gravar, ler } from '../lib/armazenamento';
 import { acoes, codigoDaUrl } from '../lib/jogo';
+import { BotaoInstalar } from '../componentes/BotaoInstalar';
+import { Historico } from './Historico';
+import { Ranking } from './Ranking';
 
-type Modo = 'inicio' | 'criar' | 'entrar';
+type Modo = 'inicio' | 'criar' | 'entrar' | 'jogarAgora' | 'ranking' | 'historico';
+type ModoFormulario = 'criar' | 'entrar' | 'jogarAgora';
+
+const TITULOS: Record<ModoFormulario, string> = {
+  criar: 'Criar uma sala',
+  entrar: 'Entrar numa sala',
+  jogarAgora: 'Jogar agora',
+};
+
+const BOTOES: Record<ModoFormulario, string> = {
+  criar: 'Criar sala',
+  entrar: 'Entrar',
+  jogarAgora: 'Procurar sala',
+};
 
 interface Perfil {
   apelido: string;
@@ -17,6 +33,9 @@ interface Perfil {
 export function Inicio() {
   const codigoInicial = codigoDaUrl();
   const [modo, setModo] = useState<Modo>(codigoInicial ? 'entrar' : 'inicio');
+
+  if (modo === 'ranking') return <Ranking aoVoltar={() => setModo('inicio')} />;
+  if (modo === 'historico') return <Historico aoVoltar={() => setModo('inicio')} />;
 
   return (
     <Tela>
@@ -39,6 +58,19 @@ export function Inicio() {
           <button type="button" className="adesivo rotate-1 text-xl" onClick={() => setModo('entrar')}>
             Entrar com código
           </button>
+          <button type="button" className="adesivo adesivo-azul -rotate-1 flex-col gap-0 text-xl" onClick={() => setModo('jogarAgora')}>
+            Jogar agora
+            <span className="text-xs font-bold opacity-90">com quem estiver online</span>
+          </button>
+          <nav className="mt-2 flex justify-center gap-6 font-bold" aria-label="Mais">
+            <button type="button" className="py-2 underline decoration-2 underline-offset-4" onClick={() => setModo('ranking')}>
+              🏆 Ranking
+            </button>
+            <button type="button" className="py-2 underline decoration-2 underline-offset-4" onClick={() => setModo('historico')}>
+              📒 Minhas partidas
+            </button>
+          </nav>
+          <BotaoInstalar />
         </div>
       ) : (
         <Formulario modo={modo} codigoInicial={codigoInicial ?? ''} aoVoltar={() => setModo('inicio')} />
@@ -47,7 +79,7 @@ export function Inicio() {
   );
 }
 
-function Formulario({ modo, codigoInicial, aoVoltar }: { modo: 'criar' | 'entrar'; codigoInicial: string; aoVoltar: () => void }) {
+function Formulario({ modo, codigoInicial, aoVoltar }: { modo: ModoFormulario; codigoInicial: string; aoVoltar: () => void }) {
   const salvo = ler<Perfil>('perfil');
   const [apelido, setApelido] = useState(salvo?.apelido ?? '');
   const [avatar, setAvatar] = useState(salvo?.avatar ?? Math.floor(Math.random() * AVATARES.length));
@@ -71,14 +103,21 @@ function Formulario({ modo, codigoInicial, aoVoltar }: { modo: 'criar' | 'entrar
     const falha =
       modo === 'criar'
         ? await acoes.criarSala(apelidoOk.data, avatar)
-        : await acoes.entrarSala(codigoOk, apelidoOk.data, avatar);
+        : modo === 'jogarAgora'
+          ? await acoes.jogarAgora(apelidoOk.data, avatar)
+          : await acoes.entrarSala(codigoOk, apelidoOk.data, avatar);
     setEnviando(false);
     if (falha) setErro(falha);
   }
 
   return (
     <form onSubmit={enviar} className="cartao mx-auto mt-8 flex max-w-md flex-col gap-5 p-5" noValidate>
-      <h2 className="font-mao text-3xl font-bold">{modo === 'criar' ? 'Criar uma sala' : 'Entrar numa sala'}</h2>
+      <h2 className="font-mao text-3xl font-bold">{TITULOS[modo]}</h2>
+      {modo === 'jogarAgora' && (
+        <p className="-mt-3 text-sm text-tinta-suave">
+          Você entra numa sala pública com outras pessoas. Se não tiver nenhuma aberta, uma nova é criada para você.
+        </p>
+      )}
 
       {modo === 'entrar' && (
         <label className="flex flex-col gap-1">
@@ -108,7 +147,7 @@ function Formulario({ modo, codigoInicial, aoVoltar }: { modo: 'criar' | 'entrar
           maxLength={MAX_APELIDO}
           autoComplete="nickname"
           placeholder="Como te chamam?"
-          autoFocus={modo === 'criar' || Boolean(codigoInicial)}
+          autoFocus={modo !== 'entrar' || Boolean(codigoInicial)}
           required
         />
         <span className="text-right text-xs text-tinta-suave">
@@ -145,7 +184,7 @@ function Formulario({ modo, codigoInicial, aoVoltar }: { modo: 'criar' | 'entrar
 
       <div className="flex flex-col gap-3">
         <button type="submit" className="adesivo adesivo-amarelo text-xl" disabled={enviando}>
-          {enviando ? 'Só um instante…' : modo === 'criar' ? 'Criar sala' : 'Entrar'}
+          {enviando ? 'Só um instante…' : BOTOES[modo]}
         </button>
         <button type="button" className="py-2 font-bold text-tinta-suave underline" onClick={aoVoltar}>
           Voltar

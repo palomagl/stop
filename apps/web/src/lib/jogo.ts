@@ -5,11 +5,14 @@ import type {
   Config,
   EstadoSala,
   Reacao,
+  RespostaArquivo,
   RespostaEntrada,
   ServidorParaCliente,
   Voto,
 } from '@rabisco/shared';
 import { apagar, gravar, ler } from './armazenamento';
+import { idDoDispositivo } from './dispositivo';
+import { ultimaConfig } from './listas';
 import { sons } from './sons';
 
 export const URL_SERVIDOR: string = import.meta.env.VITE_SERVER_URL ?? 'http://localhost:3333';
@@ -159,7 +162,7 @@ export function conectar() {
 
 // ── Ações ───────────────────────────────────────────────────────────────
 
-function comAck<E extends 'sala:criar' | 'sala:entrar'>(
+function comAck<E extends 'sala:criar' | 'sala:entrar' | 'sala:jogarAgora'>(
   evento: E,
   dados: Parameters<ClienteParaServidor[E]>[0],
 ): Promise<string | null> {
@@ -178,8 +181,17 @@ function comAck<E extends 'sala:criar' | 'sala:entrar'>(
 }
 
 export const acoes = {
-  criarSala: (apelido: string, avatar: number) => comAck('sala:criar', { apelido, avatar }),
-  entrarSala: (codigo: string, apelido: string, avatar: number) => comAck('sala:entrar', { codigo, apelido, avatar }),
+  async criarSala(apelido: string, avatar: number) {
+    const erro = await comAck('sala:criar', { apelido, avatar, dispositivo: idDoDispositivo() });
+    // A sala nova já nasce com as regras que a pessoa usou da última vez.
+    const config = ultimaConfig();
+    if (!erro && config) socket.emit('sala:configurar', { ...config, publica: false });
+    return erro;
+  },
+  entrarSala: (codigo: string, apelido: string, avatar: number) =>
+    comAck('sala:entrar', { codigo, apelido, avatar, dispositivo: idDoDispositivo() }),
+  jogarAgora: (apelido: string, avatar: number) =>
+    comAck('sala:jogarAgora', { apelido, avatar, dispositivo: idDoDispositivo() }),
   sair() {
     socket.emit('sala:sair');
     esquecerSala();
@@ -196,3 +208,11 @@ export const acoes = {
   prontoResultado: (rodada: number) => socket.emit('resultado:pronto', { rodada }),
   reagir: (emoji: Reacao) => socket.emit('reacao:enviar', { emoji }),
 };
+
+// ── Histórico e ranking (HTTP) ──────────────────────────────────────────
+
+export async function buscarArquivo<T>(rota: '/ranking' | '/historico'): Promise<RespostaArquivo<T>> {
+  const resposta = await fetch(`${URL_SERVIDOR}${rota}?dispositivo=${encodeURIComponent(idDoDispositivo())}`);
+  if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+  return (await resposta.json()) as RespostaArquivo<T>;
+}

@@ -16,6 +16,7 @@ import {
 import { ListaJogadores } from '../componentes/ListaJogadores';
 import { Tela } from '../componentes/Tela';
 import { acoes, avisar, linkDaSala } from '../lib/jogo';
+import { MAX_LISTAS, apagarLista, lembrarConfig, salvarLista, useListas } from '../lib/listas';
 
 const TEMPOS = [30, 45, 60, 90, 120, 180];
 
@@ -168,6 +169,11 @@ function ResumoConfig({ config }: { config: Config }) {
           ))}
         </ul>
       </div>
+      {config.publica && (
+        <p>
+          <strong>Sala pública:</strong> quem tocar em "Jogar agora" pode cair aqui.
+        </p>
+      )}
       <p className="text-sm text-tinta-suave">Só quem é dono da sala muda as regras.</p>
     </div>
   );
@@ -175,6 +181,8 @@ function ResumoConfig({ config }: { config: Config }) {
 
 function EditorConfig({ config }: { config: Config }) {
   const [novaCategoria, setNovaCategoria] = useState('');
+  const [nomeLista, setNomeLista] = useState('');
+  const listas = useListas();
   const todasCategorias = [...CATEGORIAS_PADRAO, ...config.categorias.filter((c) => !CATEGORIAS_PADRAO.includes(c))];
 
   /** Confere localmente com o mesmo schema do servidor antes de mandar. */
@@ -182,6 +190,20 @@ function EditorConfig({ config }: { config: Config }) {
     const r = configSchema.safeParse(nova);
     if (!r.success) return avisar(r.error.issues[0]!.message);
     acoes.configurar(r.data);
+    lembrarConfig(r.data);
+  }
+
+  function usarLista(categorias: string[]) {
+    salvar({ ...config, categorias });
+  }
+
+  function guardarLista(e: FormEvent) {
+    e.preventDefault();
+    const nome = nomeLista.replace(/\s+/g, ' ').trim();
+    if (!nome) return;
+    salvarLista(nome, config.categorias);
+    setNomeLista('');
+    avisar(`Lista "${nome}" salva neste aparelho.`);
   }
 
   function alternarCategoria(categoria: string) {
@@ -211,6 +233,48 @@ function EditorConfig({ config }: { config: Config }) {
 
   return (
     <div className="cartao space-y-6 p-4">
+      <label className="flex items-center justify-between gap-4">
+        <span>
+          <span className="rotulo block">Sala pública</span>
+          <span className="text-sm text-tinta-suave">Quem tocar em "Jogar agora" pode entrar aqui.</span>
+        </span>
+        <input
+          type="checkbox"
+          role="switch"
+          className="size-7 shrink-0 accent-[var(--caneta)]"
+          checked={config.publica}
+          onChange={(e) => salvar({ ...config, publica: e.target.checked })}
+        />
+      </label>
+
+      {listas.length > 0 && (
+        <div>
+          <h3 className="rotulo mb-2">Minhas listas</h3>
+          <ul className="flex flex-wrap gap-2">
+            {listas.map((l) => (
+              <li key={l.nome} className="flex items-center rounded-full border-2 border-tinta/30">
+                <button
+                  type="button"
+                  className="py-1.5 pl-3 pr-2 text-left font-bold"
+                  onClick={() => usarLista(l.categorias)}
+                  title={l.categorias.join(', ')}
+                >
+                  {l.nome} <span className="text-sm font-semibold text-tinta-suave">({l.categorias.length})</span>
+                </button>
+                <button
+                  type="button"
+                  className="grid size-9 place-items-center rounded-full text-tinta-suave"
+                  aria-label={`Apagar a lista ${l.nome}`}
+                  onClick={() => window.confirm(`Apagar a lista "${l.nome}"?`) && apagarLista(l.nome)}
+                >
+                  ✕
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <fieldset>
         <legend className="rotulo mb-2">Categorias (toque para marcar ou desmarcar)</legend>
         <div className="flex flex-wrap gap-2">
@@ -248,6 +312,25 @@ function EditorConfig({ config }: { config: Config }) {
           </label>
           <button type="submit" className="adesivo text-base" disabled={!novaCategoria.trim()}>
             Adicionar
+          </button>
+        </form>
+        <form onSubmit={guardarLista} className="mt-3 flex items-end gap-2">
+          <label className="flex flex-1 flex-col">
+            <span className="text-sm font-bold">Salvar estas categorias como lista</span>
+            <input
+              className="linha-escrita text-2xl"
+              value={nomeLista}
+              onChange={(e) => setNomeLista(e.target.value)}
+              maxLength={24}
+              placeholder="Ex.: Nossa lista"
+            />
+          </label>
+          <button
+            type="submit"
+            className="adesivo text-base"
+            disabled={!nomeLista.trim() || (listas.length >= MAX_LISTAS && !listas.some((l) => l.nome === nomeLista.trim()))}
+          >
+            Salvar
           </button>
         </form>
       </fieldset>

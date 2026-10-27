@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// Portas próprias para não brigar com o `npm run dev` aberto.
+// Portas próprias para não brigar com o `npm run dev` aberto. Os testes sempre sobem os próprios
+// servidores: reaproveitar um que já estivesse na porta poderia apontar para outro backend.
 const PORTA_SERVIDOR = 3334;
 const PORTA_WEB = 5174;
 
@@ -20,13 +21,13 @@ export default defineConfig({
       command: 'npm run dev -w @rabisco/server',
       env: { PORT: String(PORTA_SERVIDOR) },
       url: `http://localhost:${PORTA_SERVIDOR}/health`,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
     },
     {
       command: `npm run dev -w @rabisco/web -- --port ${PORTA_WEB} --strictPort`,
       env: { VITE_SERVER_URL: `http://localhost:${PORTA_SERVIDOR}` },
       url: `http://localhost:${PORTA_WEB}`,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
     },
   ],
 });
