@@ -1,0 +1,18 @@
+# Blueprint do Render: cria o servidor de jogo no plano grátis.
+# No painel do Render: New > Blueprint > escolha este repositório.
+services:
+  - type: web
+    name: rabisco-servidor
+    runtime: node
+    plan: free
+    # Virginia é a região do Render mais perto do Brasil.
+    region: virginia
+    buildCommand: npm ci && npm run build -w @rabisco/server
+    startCommand: npm run start -w @rabisco/server
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Endereço do site na Vercel, ex.: https://rabisco.vercel.app (vários separados por vírgula)
+      - key: ORIGENS_PERMITIDAS
+        sync: false

@@ -24,7 +24,7 @@ export function ListaJogadores({ jogadores, meuId, rotuloPronto = 'pronto', aoRe
             />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate font-mao text-2xl font-bold leading-tight">
+            <span className="block truncate font-mao text-2xl font-bold leading-normal">
               {j.apelido}
               {j.id === meuId && <span className="font-sans text-sm font-semibold text-tinta-suave"> (você)</span>}
             </span>

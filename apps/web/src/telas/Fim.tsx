@@ -67,7 +67,7 @@ export function Fim({ sala }: { sala: EstadoSala }) {
                 </span>
               )}
               <Avatar id={jogador.avatar} tamanho={degrau.posicao === 1 ? 72 : 56} />
-              <span className="mt-1 max-w-full truncate font-mao text-2xl font-bold">{jogador.apelido}</span>
+              <span className="mt-1 max-w-full truncate px-1 font-mao text-2xl font-bold leading-normal">{jogador.apelido}</span>
               <span className="text-sm font-bold text-tinta-suave">{jogador.pontos} pts</span>
               <div
                 className={`mt-1 grid w-full place-items-center rounded-t-lg border-2 border-b-0 border-tinta ${degrau.altura} ${degrau.cor}`}
