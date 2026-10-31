@@ -250,6 +250,33 @@ describe('Jogar agora', () => {
   });
 });
 
+describe('robôs', () => {
+  it('quem é dono chama um robô, a sala já começa e o /health conta como os robôs pensam', async () => {
+    const ana = novoCliente();
+    await emitirComAck(ana.socket, 'sala:criar', { apelido: 'Ana', avatar: 0, dispositivo: 'aparelho-ana' });
+    await ana.esperar((e) => e.fase === 'lobby');
+    ana.socket.emit('sala:adicionarRobo', { nivel: 'dificil' });
+    const comRobo = await ana.esperar((e) => e.jogadores.some((j) => j.robo === 'dificil'));
+    expect(comRobo.jogadores.find((j) => j.robo)!.pronto).toBe(true);
+
+    ana.socket.emit('partida:iniciar');
+    await ana.esperar((e) => e.fase === 'respostas');
+
+    const saude = (await (await fetch(`http://localhost:${servidor.porta}/health`)).json()) as { robos: unknown };
+    expect(saude.robos).toEqual({ ia: false });
+  });
+
+  it('recusa nível de robô que não existe', async () => {
+    const ana = novoCliente();
+    await emitirComAck(ana.socket, 'sala:criar', { apelido: 'Ana', avatar: 0, dispositivo: 'aparelho-ana' });
+    await ana.esperar((e) => e.fase === 'lobby');
+    (ana.socket.emit as (e: string, d: unknown) => void)('sala:adicionarRobo', { nivel: 'impossivel' });
+    ana.socket.emit('sala:adicionarRobo', { nivel: 'facil' });
+    const estado = await ana.esperar((e) => e.jogadores.length === 2);
+    expect(estado.jogadores.map((j) => j.robo)).toEqual([null, 'facil']);
+  });
+});
+
 describe('histórico e ranking', () => {
   it('sem banco, as rotas respondem que o recurso está desligado', async () => {
     const resposta = await fetch(`http://localhost:${servidor.porta}/ranking`);

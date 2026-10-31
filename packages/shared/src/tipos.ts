@@ -1,4 +1,4 @@
-import type { REACOES } from './constantes';
+import type { NIVEIS_ROBO, REACOES } from './constantes';
 
 export type Fase = 'lobby' | 'sorteio' | 'respostas' | 'travando' | 'correcao' | 'resultado' | 'fim';
 
@@ -7,6 +7,8 @@ export type Reacao = (typeof REACOES)[number];
 export type Voto = 'sim' | 'nao';
 
 export type MotivoAnulacao = 'vazia' | 'letra' | 'so-letra';
+
+export type NivelRobo = (typeof NIVEIS_ROBO)[number];
 
 export interface Config {
   categorias: string[];
@@ -31,6 +33,8 @@ export interface JogadorPublico {
   participando: boolean;
   /** Se quem está vendo já denunciou o apelido dessa pessoa. */
   denunciadoPorMim: boolean;
+  /** Nível do robô, ou null para gente de verdade. */
+  robo: NivelRobo | null;
 }
 
 export interface RespostaEmCorrecao {

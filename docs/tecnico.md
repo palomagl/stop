@@ -26,6 +26,7 @@ apps/
     src/jogo/          Sala (máquina de estados) e GerenciadorDeSalas
     src/socket/        eventos do Socket.IO, rotas HTTP, validação e limite de eventos
     src/arquivo/       partidas terminadas: Postgres ou memória
+    src/robos/         robôs: plano de jogo, controle por sala, Gemini e listas de palavras
 packages/
   shared/              regras que os dois lados precisam conhecer
 e2e/                   testes com dois navegadores
@@ -63,13 +64,13 @@ O servidor sempre manda o **retrato completo da sala** (`sala:estado`), já filt
 | `partida:iniciar`, `partida:jogarDeNovo` | `rodada:stop`: quem apertou, para o apito |
 | `resposta:rascunho`, `rodada:stop`, `rodada:pularLetra` | `reacao`: emoji flutuante |
 | `voto:enviar`, `correcao:pronto`, `resultado:pronto`, `reacao:enviar` | `jogador:removido` |
-| `sala:jogarAgora` (com confirmação), `jogador:denunciar` | |
+| `sala:jogarAgora` (com confirmação), `jogador:denunciar`, `sala:adicionarRobo` | |
 
 Fora do Socket.IO, há três rotas HTTP:
 
 | Rota | O que devolve |
 |---|---|
-| `GET /health` | se o servidor está de pé e se tem banco ligado |
+| `GET /health` | se o servidor está de pé, se tem banco ligado e se os robôs estão pensando com IA |
 | `GET /ranking?dispositivo=…` | os 20 primeiros do ranking; a pessoa que pergunta vem marcada com `eu` |
 | `GET /historico?dispositivo=…` | as últimas 30 partidas daquele aparelho |
 
@@ -138,6 +139,17 @@ Letra difícil (tipo Y numa sala sem K, W, Y e X excluídos) acontece. Durante a
 
 No fim de cada rodada o servidor manda, além do placar, a **folha**: cada categoria com a resposta de cada pessoa, os pontos e se foi anulada. No fim da partida o pódio aparece com suspense (rufar de tambor, depois 3º, 2º e 1º, cada bicho caindo no seu degrau); dá para pular, e quem desativou animações vê tudo de uma vez.
 
+### Robôs
+
+Dá para jogar sozinho ou completar a turma com robôs fáceis, médios ou difíceis (até 5 por sala). O robô é um jogador de verdade dentro da sala: ele olha o mesmo retrato que uma pessoa recebe e age pelos mesmos caminhos (rascunho, STOP, voto e "Pronto"), então a regra do jogo vale igual para todo mundo.
+
+- **Joga no tempo de gente.** Cada resposta leva o tempo de lembrar a palavra (2 a 11 segundos, conforme o nível) mais o de digitar letra por letra no celular. Ideia rara demora mais para vir. Ele vai mais ou menos na ordem das categorias, às vezes pula uma e volta, trava em algumas e deixa em branco. Quem joga vê o progresso dele subir aos poucos. Só aperta STOP quando preencheu tudo, depois de conferir.
+- **Nível muda o jeito de jogar.** O fácil vai no óbvio (e repete com os outros, valendo 5), trava mais e às vezes escreve algo de outra categoria. O difícil foge da primeira ideia para fazer resposta única e quase nunca trava.
+- **Vota com cuidado.** Só anula o que acha que não vale; quando não sabe, não vota. Robô não vota para pular letra, não pode ser denunciado e não segura a sala: sem nenhuma pessoa, a sala fecha. Se todo mundo já apertou "Pronto", os robôs se apressam.
+- **De onde vêm as ideias.** Com `GEMINI_API_KEY`, o servidor pede ao Gemini, no sorteio da letra, até 6 respostas por categoria, da mais comum para a mais rara, em JSON com formato obrigatório (`responseSchema`). Na correção, um segundo pedido julga de uma vez o que as pessoas escreveram. Se um modelo estiver lotado ou sem cota, tenta o próximo (`gemini-3.5-flash-lite` → `gemini-3.5-flash`), como no Ritmo. Os pedidos são guardados por letra e categorias, ficam limitados a 12 por minuto, e sem cota o servidor descansa um minuto. Sem chave, ou se tudo falhar, o robô usa as listas de palavras do próprio jogo (`apps/server/src/robos/palavras.ts`), que cobrem as categorias de sempre.
+- **A chave fica só no servidor.** Quem chama a IA é o servidor, não o navegador, então a chave nunca vai para o site.
+- **Partida contra robô é treino:** aparece em "Minhas partidas", mas não conta no ranking.
+
 ### Denúncia de apelido
 
 Nas salas públicas ("Jogar agora") aparece gente desconhecida, então cada pessoa pode tocar na 🚩 ao lado de outra, na sala de espera ou na correção. Quem recebe denúncia da **maioria das outras pessoas da sala, e de pelo menos duas**, sai da sala e vê o motivo na tela. Cada pessoa denuncia uma vez, a própria pessoa não conta, e as denúncias de quem sai da sala deixam de valer. Nas salas particulares a bandeira não aparece, porque quem é dono já pode remover alguém. Cada denúncia fica registrada no log do servidor.
@@ -205,6 +217,7 @@ As tabelas são criadas sozinhas na primeira vez que o servidor liga. Se pular e
 2. Selecione este repositório. O `render.yaml` já define tudo (Node 22, build, start e `/health`).
 3. Em `DATABASE_URL`, cole a connection string do Neon. Deixe `ORIGENS_PERMITIDAS` vazio por enquanto.
 4. Anote a URL gerada, por exemplo `https://stopou-servidor.onrender.com`. Abrindo `/health` nela, deve aparecer `"banco":true`.
+5. Para os robôs pensarem com IA (opcional): crie uma chave grátis em [aistudio.google.com](https://aistudio.google.com) (**Get API key**), de preferência num projeto só do Stopou!, porque a cota grátis é por projeto. Cole em `GEMINI_API_KEY`. No `/health` deve aparecer `"robos":{"ia":true,…}`. Para trocar de modelo, use `GEMINI_MODELO`.
 
 > O plano grátis do Render **dorme depois de ~15 minutos sem uso**, e a primeira visita depois disso leva até um minuto. O site mostra a tela "Acordando o servidor…" enquanto isso. Quando ele dorme, as salas abertas somem (as partidas terminadas continuam no Neon).
 
@@ -227,11 +240,13 @@ Volte ao Render e preencha `ORIGENS_PERMITIDAS` com o endereço da Vercel. Dá p
 | **"Acordando o servidor…"** por até um minuto | Normal no plano grátis: o servidor estava dormindo. |
 | **"O servidor não respondeu"** | Abra `https://…onrender.com/health` no navegador. Se não abrir, veja os logs do serviço no Render. Se abrir, confira se o endereço do site está em `ORIGENS_PERMITIDAS` (com `https://`, sem barra no fim). |
 | Ranking diz que o servidor não guarda partidas | Falta `DATABASE_URL` no Render (passo 1). |
+| Robô só responde coisas básicas | Sem `GEMINI_API_KEY`, ele usa a lista de palavras do jogo. Com a chave, o `ultimoErro` em `/health` mostra por que a IA falhou (chave errada, sem cota…). |
 
 ## Fases
 
 - **Fase 1:** salas por código, partida completa em tempo real, reconexão, visual, sons, acessibilidade, testes e CI.
 - **Fase 2:** salas públicas com "Jogar agora", listas de categorias salvas, histórico e ranking com Postgres, e instalação como app.
+- **Fase 3:** robôs com IA (Gemini) que jogam no tempo de gente, em três níveis.
 
 Ideias para depois: contas opcionais para levar o histórico entre aparelhos, moderação de salas públicas (denunciar apelido) e um modo "revanche" com placar acumulado entre partidas.
 

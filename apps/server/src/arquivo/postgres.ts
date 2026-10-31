@@ -1,4 +1,5 @@
 import type { LinhaRanking, PartidaNoHistorico } from '@rabisco/shared';
+import { PREFIXO_ROBO } from '../robos/nomes';
 import type { Arquivo, PartidaTerminada } from './tipos';
 
 /** O mínimo que o arquivo precisa de um banco. Serve tanto para o `pg` quanto para o PGlite dos testes. */
@@ -123,10 +124,15 @@ export class ArquivoPostgres implements Arquivo {
               pa.dispositivo = $1 AS eu
          FROM participacoes pa
          JOIN partidas p ON p.id = pa.partida_id
+        -- Partida contra robô é treino: aparece no histórico, mas não no ranking.
+        WHERE NOT EXISTS (
+          SELECT 1 FROM participacoes robo
+           WHERE robo.partida_id = pa.partida_id AND robo.dispositivo LIKE $3 || '%'
+        )
         GROUP BY pa.dispositivo
         ORDER BY vitorias DESC, pontos DESC, apelido
         LIMIT $2`,
-      [dispositivo ?? '', limite],
+      [dispositivo ?? '', limite, PREFIXO_ROBO],
     );
     // count e sum voltam como texto no pg (bigint); Number resolve sem perder nada nesta escala.
     return rows.map((r, i) => ({

@@ -98,6 +98,19 @@ describe.each(implementacoes)('arquivo de partidas: %s', (_nome, abrir) => {
     expect(ranking).toHaveLength(1);
     expect(ranking[0]!.eu).toBe(false);
   });
+
+  it('partida contra robô aparece no histórico, mas não conta no ranking', async () => {
+    arquivo = await abrir();
+    await arquivo.salvarPartida(partida(1, [['aparelho-ana', 'Ana', 30, 1], ['robo-1234', 'Bip', 10, 2]]));
+    await arquivo.salvarPartida(partida(2, [['aparelho-ana', 'Ana', 5, 2], ['aparelho-bia', 'Bia', 20, 1]]));
+
+    expect(await arquivo.historico('aparelho-ana', 10)).toHaveLength(2);
+    const ranking = await arquivo.ranking('aparelho-ana', 10);
+    expect(ranking.map((l) => [l.apelido, l.partidas, l.vitorias])).toEqual([
+      ['Bia', 1, 1],
+      ['Ana', 1, 0],
+    ]);
+  });
 });
 
 describe('arquivo Postgres', () => {

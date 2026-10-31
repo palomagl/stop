@@ -19,3 +19,9 @@ services:
       # Connection string do Neon (Postgres grátis). Vazio desliga histórico e ranking.
       - key: DATABASE_URL
         sync: false
+      # Chave do Gemini (aistudio.google.com). Vazio: os robôs usam a lista de palavras do jogo.
+      - key: GEMINI_API_KEY
+        sync: false
+      # Opcional: modelo principal dos robôs (padrão gemini-3.5-flash-lite).
+      - key: GEMINI_MODELO
+        sync: false

@@ -243,3 +243,30 @@ test('pacote pronto de categorias e votação para pular a letra', async ({ brow
   // Só um pulo por partida
   await expect(bia.getByRole('button', { name: /pular a letra/ })).toHaveCount(0);
 });
+
+test('contra robôs: eles entram prontos, escrevem aos poucos e aparecem na correção', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Contra robôs' }).click();
+  await page.getByLabel('Seu apelido').fill('Paloma');
+  await page.getByRole('radio', { name: 'Difícil' }).click();
+  await page.getByRole('radio', { name: '2 robôs' }).click();
+  await page.getByRole('button', { name: 'Chamar os robôs' }).click();
+
+  await expect(page.getByText('Código da sala', { exact: true })).toBeVisible();
+  await expect(page.getByText('robô difícil')).toHaveCount(2);
+  await page.getByRole('button', { name: /Rapidinho/ }).click();
+  await page.getByRole('button', { name: 'Começar partida' }).click();
+
+  await expect(campos(page)).toHaveCount(5, { timeout: 10_000 });
+  const progresso = page.getByRole('list', { name: 'Progresso dos outros jogadores' });
+  await expect(progresso).toContainText('0/5');
+  // Robô não é instantâneo: a primeira resposta leva uns segundos.
+  await expect(progresso).toContainText(/[1-5]\/5/, { timeout: 20_000 });
+
+  const letra = (await page.getByLabel(/^Letra [A-Z]$/).getAttribute('aria-label'))!.slice(-1);
+  for (let i = 0; i < 5; i++) await campos(page).nth(i).fill(`${letra}palavra${i}`);
+  await page.getByRole('button', { name: 'STOP!' }).click();
+
+  await expect(page.getByText(/Correção/).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole('img', { name: 'robô' }).first()).toBeVisible();
+});

@@ -1,4 +1,4 @@
-import type { JogadorPublico } from '@rabisco/shared';
+import { NOMES_NIVEL_ROBO, type JogadorPublico } from '@rabisco/shared';
 import { Avatar } from './Avatar';
 
 interface Props {
@@ -32,7 +32,13 @@ export function ListaJogadores({ jogadores, meuId, rotuloPronto = 'pronto', aoRe
             </span>
             <span className="flex flex-wrap gap-x-2 text-xs font-bold text-tinta-suave">
               {j.dono && <span>👑 dono da sala</span>}
-              <span>{j.online ? 'online' : 'fora do ar'}</span>
+              {j.robo ? (
+                <span>
+                  <SeloRobo /> robô {NOMES_NIVEL_ROBO[j.robo].toLowerCase()}
+                </span>
+              ) : (
+                <span>{j.online ? 'online' : 'fora do ar'}</span>
+              )}
             </span>
           </span>
           {j.pronto && (
@@ -40,7 +46,7 @@ export function ListaJogadores({ jogadores, meuId, rotuloPronto = 'pronto', aoRe
               <span aria-hidden="true">✓</span> {rotuloPronto}
             </span>
           )}
-          {aoDenunciar && !aoRemover && j.id !== meuId && (
+          {aoDenunciar && !aoRemover && j.id !== meuId && !j.robo && (
             <BotaoDenunciar jogador={j} aoDenunciar={aoDenunciar} />
           )}
           {aoRemover && j.id !== meuId && (
@@ -56,6 +62,15 @@ export function ListaJogadores({ jogadores, meuId, rotuloPronto = 'pronto', aoRe
         </li>
       ))}
     </ul>
+  );
+}
+
+/** Carinha de robô ao lado do nome, para ninguém achar que está jogando com gente. */
+export function SeloRobo() {
+  return (
+    <span role="img" aria-label="robô" title="Robô">
+      🤖
+    </span>
   );
 }
 

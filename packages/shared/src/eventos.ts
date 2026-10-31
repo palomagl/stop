@@ -1,4 +1,4 @@
-import type { Config, EstadoSala, Reacao, Voto } from './tipos';
+import type { Config, EstadoSala, NivelRobo, Reacao, Voto } from './tipos';
 
 export type RespostaEntrada =
   | { ok: true; codigo: string; token: string; jogadorId: string }
@@ -21,6 +21,8 @@ export interface ClienteParaServidor {
   'sala:sair': () => void;
   'sala:configurar': (config: Config) => void;
   'sala:remover': (dados: { jogadorId: string }) => void;
+  /** Quem é dono da sala chama um robô para jogar (só no lobby). */
+  'sala:adicionarRobo': (dados: { nivel: NivelRobo }) => void;
   /** Denuncia o apelido de alguém numa sala pública. */
   'jogador:denunciar': (dados: { jogadorId: string }) => void;
   'jogador:pronto': (dados: { pronto: boolean }) => void;

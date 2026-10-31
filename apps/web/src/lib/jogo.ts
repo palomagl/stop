@@ -4,6 +4,7 @@ import type {
   ClienteParaServidor,
   Config,
   EstadoSala,
+  NivelRobo,
   Reacao,
   RespostaArquivo,
   RespostaEntrada,
@@ -147,9 +148,10 @@ socket.on('connect', () => {
   }
   // Voltou a internet ou atualizou a página: pede para entrar de novo no mesmo lugar.
   socket.emit('sala:reconectar', sessao, (resposta) => {
+    // Deu certo: continua "restaurando" até o retrato da sala chegar, que vem logo depois.
+    // Sem isso, o formulário de entrar pisca na tela por um instante.
     if (resposta.ok) {
       entrouNaSala(resposta);
-      mudar({ restaurando: false });
     } else {
       if (estado.sala) avisar(resposta.erro);
       esquecerSala();
@@ -162,7 +164,7 @@ socket.on('disconnect', () => mudar({ conexao: estado.conexao === 'online' ? 'ca
 socket.on('connect_error', (erro) => mudar({ erroConexao: erro.message }));
 
 socket.on('sala:estado', (sala) => {
-  mudar({ sala, diferencaRelogio: sala.agora - Date.now() });
+  mudar({ sala, restaurando: false, diferencaRelogio: sala.agora - Date.now() });
 });
 
 socket.on('sala:erro', ({ mensagem }) => avisar(mensagem));
@@ -245,6 +247,13 @@ export const acoes = {
     comAck('sala:entrar', { codigo, apelido, avatar, dispositivo: idDoDispositivo() }),
   jogarAgora: (apelido: string, avatar: number) =>
     comAck('sala:jogarAgora', { apelido, avatar, dispositivo: idDoDispositivo() }),
+  /** Cria uma sala só sua e já chama os robôs. Dá para mudar as regras antes de começar. */
+  async jogarContraRobos(apelido: string, avatar: number, nivel: NivelRobo, quantos: number) {
+    const erro = await acoes.criarSala(apelido, avatar);
+    if (!erro) for (let i = 0; i < quantos; i++) acoes.adicionarRobo(nivel);
+    return erro;
+  },
+  adicionarRobo: (nivel: NivelRobo) => socket.emit('sala:adicionarRobo', { nivel }),
   sair() {
     socket.emit('sala:sair');
     esquecerSala();

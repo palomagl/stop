@@ -2,11 +2,16 @@ import { useEffect, useState, type FormEvent } from 'react';
 import {
   ALFABETO,
   CATEGORIAS_PADRAO,
+  DESCRICOES_NIVEL_ROBO,
   DICAS_CATEGORIA,
   MAX_CATEGORIA,
+  MAX_JOGADORES,
+  MAX_ROBOS,
   MAX_RODADAS,
   MIN_JOGADORES,
   MIN_RODADAS,
+  NIVEIS_ROBO,
+  NOMES_NIVEL_ROBO,
   PACOTES,
   configSchema,
   normalizar,
@@ -40,7 +45,7 @@ export function Lobby({ sala }: { sala: EstadoSala }) {
       </button>
       <p className="text-center text-sm font-bold text-texto-suave" aria-live="polite">
         {online.length < MIN_JOGADORES
-          ? 'Mande o código para mais alguém entrar.'
+          ? 'Mande o código para alguém entrar, ou chame um robô.'
           : faltamProntos.length > 0
             ? `Esperando ${faltamProntos.map((j) => j.apelido).join(', ')} ficar pronto.`
             : 'Todo mundo pronto!'}
@@ -71,6 +76,7 @@ export function Lobby({ sala }: { sala: EstadoSala }) {
           aoRemover={souDono ? remover : undefined}
           aoDenunciar={sala.config.publica ? acoes.denunciar : undefined}
         />
+        {souDono && <ChamarRobo sala={sala} />}
       </section>
 
       <section className="mt-8" aria-labelledby="titulo-config">
@@ -86,6 +92,42 @@ export function Lobby({ sala }: { sala: EstadoSala }) {
         </button>
       </div>
     </Tela>
+  );
+}
+
+/** Quem é dono chama robô para completar a turma ou para jogar sozinho. */
+function ChamarRobo({ sala }: { sala: EstadoSala }) {
+  const robos = sala.jogadores.filter((j) => j.robo).length;
+  const cabe = sala.jogadores.length < MAX_JOGADORES && robos < MAX_ROBOS;
+  return (
+    <div className="cartao mt-3 px-4 py-3" role="group" aria-labelledby="titulo-chamar-robo">
+      <h3 id="titulo-chamar-robo" className="rotulo">
+        Chamar robô
+      </h3>
+      <div className="mt-2 grid grid-cols-3 gap-2">
+        {NIVEIS_ROBO.map((nivel) => (
+          <button
+            key={nivel}
+            type="button"
+            className="botao botao-pequeno flex-col gap-0 px-1 leading-tight"
+            disabled={!cabe}
+            onClick={() => acoes.adicionarRobo(nivel)}
+            aria-label={`Chamar robô ${NOMES_NIVEL_ROBO[nivel].toLowerCase()}`}
+            title={DESCRICOES_NIVEL_ROBO[nivel]}
+          >
+            <span aria-hidden="true">🤖</span>
+            {NOMES_NIVEL_ROBO[nivel]}
+          </button>
+        ))}
+      </div>
+      <p className="mt-2 text-xs font-semibold text-tinta-suave">
+        {cabe
+          ? 'Robô joga como gente: pensa, digita, vota e às vezes erra. Partida com robô não conta no ranking.'
+          : robos >= MAX_ROBOS
+            ? `Já tem ${MAX_ROBOS} robôs, o máximo.`
+            : 'A sala está cheia.'}
+      </p>
+    </div>
   );
 }
 
